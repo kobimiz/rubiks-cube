@@ -1,5 +1,8 @@
-import { glMatrix, mat4 } from "gl-matrix";
+import { mat4 } from "gl-matrix";
 import Shader from "./shader";
+
+import * as cubeVertex from './shaders/cube-vert';
+import * as cubeFragment from './shaders/cube-frag';
 
 let canvas = document.getElementsByTagName('canvas')[0];
 let gl = canvas.getContext('webgl2');
@@ -55,6 +58,7 @@ let vertices = new Float32Array([
 
 let positions = [
     [ 0.0,  0.0,  0.0],
+    
     // [ 2.0,  5.0, -15.0],
     // [-1.5, -2.2, -2.5],
     // [-3.8, -2.0, -12.3],
@@ -81,40 +85,7 @@ gl.enableVertexAttribArray(1);
 
 // textures...
 
-
-
-let vs_source = `#version 300 es
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec2 aTexCoord;
-
-// out vec2 TexCoord;
-
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-
-void main()
-{
-    gl_Position = projection * view * model * vec4(aPos, 1.0f);
-    // gl_Position = vec4(aPos, 1.0f);
-    // TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
-}`;
-
-let fs_source = `#version 300 es
-out highp vec4 FragColor;
-
-// in highp vec2 TexCoord;
-
-// uniform sampler2D texture1;
-// uniform sampler2D texture2;
-
-void main()
-{
-    // FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);
-    FragColor = vec4(0.7, 0.7, 0.7, 1.0);
-}`;
-
-let shader = new Shader(gl, vs_source, fs_source);
+let shader = new Shader(gl, cubeVertex.default, cubeFragment.default);
 shader.use();
 // shader.setNumber("texture1");
 
@@ -158,6 +129,3 @@ function draw(gl: WebGL2RenderingContext) {
 
 // TODO handle draw parameter
 setInterval(draw, time_delta, gl);
-
-// gl.deleteVertexArray(vao);
-// gl.deleteBuffer(vbo);
