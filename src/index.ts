@@ -18,7 +18,7 @@ let shader = new Shader(gl, cubeVertex.default, cubeFragment.default);
 shader.use();
 // shader.setNumber("texture1");
 
-let cube = new Cube(gl, shader);
+let cube = new Cube(gl, shader, [0.3, 0, 0], [0.5, 0.5, 0.5], [0.3, 0.5, 0.7, 1.0]);
 
 let fps = 20;
 let time_delta = 1000 / fps;

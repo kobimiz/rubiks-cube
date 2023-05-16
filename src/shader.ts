@@ -1,4 +1,4 @@
-import { mat4 } from "gl-matrix";
+import { mat4, vec4 } from "gl-matrix";
 
 class Shader {
     gl: WebGL2RenderingContext;
@@ -67,7 +67,7 @@ class Shader {
     // ------------------------------------------------------------------------
     // NOTE array length can be only (?1),2,3,4
     // TODO check
-    setVec4(name: string, value: Array<number>) { 
+    setVec4(name: string, value: vec4) { 
         this.gl.uniform4fv(this.gl.getUniformLocation(this.program, name), value);
     }
     
