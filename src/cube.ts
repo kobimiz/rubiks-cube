@@ -19,6 +19,15 @@ enum ColorName {
     GREEN,
 }
 
+type CubeColors = {
+    back: ColorName,
+    front: ColorName,
+    left: ColorName,
+    right: ColorName,
+    down: ColorName,
+    up: ColorName,
+}
+
 class Cube {
     static vertices: Float32Array;
     static colors: Float32Array;
@@ -31,9 +40,8 @@ class Cube {
 
     pos: Float32Array;
     scale: Float32Array;
-    color: Float32Array;
 
-    constructor(gl: WebGL2RenderingContext, shader: Shader, pos: Array<number>, scale: Array<number>, color: Array<number>) {
+    constructor(gl: WebGL2RenderingContext, shader: Shader, pos: Array<number>, scale: Array<number>, color: CubeColors) {
         this.gl = gl;
         this.shader = shader;
 
@@ -42,7 +50,16 @@ class Cube {
 
         this.pos = new Float32Array(pos);
         this.scale = new Float32Array(scale);
-        this.color = new Float32Array(color);
+        
+        // back, front, left, right, down, up
+        let color_buffer = new Float32Array([
+            Cube.getFaceColor(color.back),
+            Cube.getFaceColor(color.front),
+            Cube.getFaceColor(color.left),
+            Cube.getFaceColor(color.right),
+            Cube.getFaceColor(color.down),
+            Cube.getFaceColor(color.up),
+        ].flat(2));
         
         gl.bindVertexArray(this.vao);
         gl.bindBuffer(gl.ARRAY_BUFFER, Cube.vboVertices);
@@ -50,28 +67,12 @@ class Cube {
         gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 3 * 4, 0 * 4);
         gl.enableVertexAttribArray(0);
 
-        // back, front, left, right, down, up
-        let color_buffer = new Float32Array([
-            Cube.getFaceColor(ColorName.BLUE),
-            Cube.getFaceColor(ColorName.RED),
-            Cube.getFaceColor(ColorName.YELLOW),
-            Cube.getFaceColor(ColorName.ORANGE),
-            Cube.getFaceColor(ColorName.WHITE),
-            Cube.getFaceColor(ColorName.GREEN),
-        ].flat(2));
-
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vboColor);
         gl.bufferData(gl.ARRAY_BUFFER, color_buffer, gl.STATIC_DRAW);
 
         gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 4 * 4, 0 * 4);
         gl.enableVertexAttribArray(1);
 
-
-        // gl.bufferData(gl.ARRAY_BUFFER, Cube.vertices, gl.STATIC_DRAW);
-        
-        // gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 3 * 4, 0 * 4);
-        // gl.enableVertexAttribArray(0);
-        
         // textures...
         shader.use();
         // shader.setNumber("texture1");
@@ -235,4 +236,4 @@ Cube.colors = new Float32Array([
 ]);
 
 
-export { Cube, Color, ColorName };
+export { Cube, Color, ColorName, CubeColors };
