@@ -48,6 +48,8 @@ class Cube {
     y_axis: Float32Array;
     z_axis: Float32Array;
 
+    selected: boolean;
+
     constructor(gl: WebGL2RenderingContext, shader: Shader, pos: Array<number>, scale: Array<number>, color: CubeColors) {
         this.gl = gl;
         this.shader = shader;
@@ -63,6 +65,7 @@ class Cube {
         this.x_axis = new Float32Array([1,0,0]);
         this.y_axis = new Float32Array([0,1,0]);
         this.z_axis = new Float32Array([0,0,1]);
+        this.selected = false;
 
         // back, front, left, right, down, up
         let color_buffer = new Float32Array([
@@ -111,6 +114,7 @@ class Cube {
         this.shader.setMat4("view", view);
         this.shader.setMat4("projection", projection);
         this.shader.setMat4("rotation", this.rotationMatrix);
+        this.shader.setBool("selected", this.selected);
     
         // render boxes
         this.gl.bindVertexArray(this.vao);
@@ -137,7 +141,11 @@ class Cube {
     }
 
     rotate(mat: mat4) {
-        mat4.multiply(this.rotationMatrix, this.rotationMatrix, mat);
+        mat4.multiply(this.rotationMatrix, mat, this.rotationMatrix);
+    }
+
+    select(on: boolean) {
+        this.selected = on;
     }
 
     static init(gl: WebGL2RenderingContext) {

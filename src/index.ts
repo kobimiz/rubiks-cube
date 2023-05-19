@@ -37,7 +37,7 @@ function draw(gl: WebGL2RenderingContext) {
 }
 
 setInterval(draw, time_delta, gl);
-
+console.log(rubiks_cube)
 
 let i = 0;
 document.addEventListener('keydown', e => {
@@ -45,14 +45,13 @@ document.addEventListener('keydown', e => {
         rubiks_cube.turnRight();
     } else if (e.key == 'ArrowUp') {
         rubiks_cube.turnUp();
+    } else if (e.key == 'ArrowLeft') {
+        rubiks_cube.turnLeft();
     } else if (e.key == 'ArrowRight') {
-        let mat = mat4.create();
-        if (i % 2 == 0) {
-            mat4.rotate(mat, mat, Math.PI, [0,1,0]);
-        } else {
-            mat4.rotate(mat, mat, Math.PI, [1,0,0]);
-        }
-        i++;
-        rubiks_cube.cubes[26].rotate(mat);
+        rubiks_cube.turnDown();
+    } else if (e.key == 'e') {
+        rubiks_cube.turnFront();
+    } else if (e.key == 'r') {
+        rubiks_cube.turnBack();
     }
 });
