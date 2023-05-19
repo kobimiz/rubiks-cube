@@ -44,9 +44,6 @@ class Cube {
     scale: Float32Array;
 
     rotationMatrix: mat4;
-    x_axis: Float32Array;
-    y_axis: Float32Array;
-    z_axis: Float32Array;
 
     selected: boolean;
 
@@ -62,9 +59,6 @@ class Cube {
         
         this.rotationMatrix = mat4.create();
         
-        this.x_axis = new Float32Array([1,0,0]);
-        this.y_axis = new Float32Array([0,1,0]);
-        this.z_axis = new Float32Array([0,0,1]);
         this.selected = false;
 
         // back, front, left, right, down, up

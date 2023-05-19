@@ -4,7 +4,6 @@ import * as cubeVertex from './shaders/cube-vert';
 import * as cubeFragment from './shaders/cube-frag';
 import RubiksCube from "./rubiksCube";
 import { Cube } from "./cube";
-import { mat4 } from "gl-matrix";
 
 let canvas = document.getElementsByTagName('canvas')[0];
 let gl = canvas.getContext('webgl2');
