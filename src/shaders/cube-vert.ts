@@ -7,9 +7,10 @@ out vec4 color;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 rotation;
 
 void main()
 {
     color = aColor;
-    gl_Position = projection * view * model * vec4(aPos, 1.0f);
+    gl_Position = projection * view * rotation * model * vec4(aPos, 1.0f);
 }`

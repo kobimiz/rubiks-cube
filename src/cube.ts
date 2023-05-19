@@ -8,6 +8,7 @@ const Color = [
     [1,88/255,0,1],
     [0,70/255,173/255,1],
     [0,155/255,72/255,1],
+    [0,0,0,1],
 ]
 
 enum ColorName {
@@ -17,6 +18,7 @@ enum ColorName {
     ORANGE,
     BLUE,
     GREEN,
+    BLACK,
 }
 
 type CubeColors = {
@@ -41,6 +43,11 @@ class Cube {
     pos: Float32Array;
     scale: Float32Array;
 
+    rotationMatrix: mat4;
+    x_axis: Float32Array;
+    y_axis: Float32Array;
+    z_axis: Float32Array;
+
     constructor(gl: WebGL2RenderingContext, shader: Shader, pos: Array<number>, scale: Array<number>, color: CubeColors) {
         this.gl = gl;
         this.shader = shader;
@@ -51,6 +58,12 @@ class Cube {
         this.pos = new Float32Array(pos);
         this.scale = new Float32Array(scale);
         
+        this.rotationMatrix = mat4.create();
+        
+        this.x_axis = new Float32Array([1,0,0]);
+        this.y_axis = new Float32Array([0,1,0]);
+        this.z_axis = new Float32Array([0,0,1]);
+
         // back, front, left, right, down, up
         let color_buffer = new Float32Array([
             Cube.getFaceColor(color.back),
@@ -78,25 +91,26 @@ class Cube {
         // shader.setNumber("texture1");
     }
 
-    draw() {
+    draw(view: mat4) {
         this.shader.use();
         
-        let view       = mat4.create();
+        // let view       = mat4.create();
         let projection = mat4.create();
         mat4.perspective(
             projection,
             45.0,
-            600.0 / 600.0,
+            1000.0 / 1000.0,
             0.1,
             100.0
         );
 
-        mat4.translate(view, view, this.pos);
+        // mat4.translate(view, view, this.pos);
         // projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         // view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
         // pass transformation matrices to the shader
         this.shader.setMat4("view", view);
         this.shader.setMat4("projection", projection);
+        this.shader.setMat4("rotation", this.rotationMatrix);
     
         // render boxes
         this.gl.bindVertexArray(this.vao);
@@ -107,19 +121,23 @@ class Cube {
             // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
             mat4.scale(model, model, this.scale);
-            // mat4.translate(model, model, this.pos);
+            mat4.translate(model, model, this.pos);
 
-            mat4.rotate(
-                model,
-                model,
-                (Math.sin(new Date().getTime() / 1000) + 1) * Math.PI / 2,
-                [0.3, 0.7, 0.1]
-            );
+            // mat4.rotate(
+            //     model,
+            //     model,
+            //     (Math.sin(new Date().getTime() / 1000) + 1) * Math.PI / 2,
+            //     [0.3, 0.7, 0.1]
+            // );
 
             this.shader.setMat4("model", model);
             
             this.gl.drawArrays(this.gl.TRIANGLES, 0, 36);
         }
+    }
+
+    rotate(mat: mat4) {
+        mat4.multiply(this.rotationMatrix, this.rotationMatrix, mat);
     }
 
     static init(gl: WebGL2RenderingContext) {

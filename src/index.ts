@@ -4,6 +4,7 @@ import * as cubeVertex from './shaders/cube-vert';
 import * as cubeFragment from './shaders/cube-frag';
 import RubiksCube from "./rubiksCube";
 import { Cube } from "./cube";
+import { mat4 } from "gl-matrix";
 
 let canvas = document.getElementsByTagName('canvas')[0];
 let gl = canvas.getContext('webgl2');
@@ -36,3 +37,22 @@ function draw(gl: WebGL2RenderingContext) {
 }
 
 setInterval(draw, time_delta, gl);
+
+
+let i = 0;
+document.addEventListener('keydown', e => {
+    if (e.key == 'ArrowDown') {
+        rubiks_cube.turnRight();
+    } else if (e.key == 'ArrowUp') {
+        rubiks_cube.turnUp();
+    } else if (e.key == 'ArrowRight') {
+        let mat = mat4.create();
+        if (i % 2 == 0) {
+            mat4.rotate(mat, mat, Math.PI, [0,1,0]);
+        } else {
+            mat4.rotate(mat, mat, Math.PI, [1,0,0]);
+        }
+        i++;
+        rubiks_cube.cubes[26].rotate(mat);
+    }
+});
