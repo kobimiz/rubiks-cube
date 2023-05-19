@@ -4,6 +4,7 @@ import * as cubeVertex from './shaders/cube-vert';
 import * as cubeFragment from './shaders/cube-frag';
 import RubiksCube from "./rubiksCube";
 import { Cube } from "./cube";
+import { vec3 } from "gl-matrix";
 
 let canvas = document.getElementsByTagName('canvas')[0];
 let gl = canvas.getContext('webgl2');
@@ -53,4 +54,22 @@ document.addEventListener('keydown', e => {
     } else if (e.key == 'r') {
         rubiks_cube.turnBack();
     }
+});
+
+document.addEventListener('keydown', e => {
+    const cameraSpeed = 0.2;
+
+    let frontScaled = vec3.scale([0,0,0], rubiks_cube.cameraFront, cameraSpeed);
+    let cross = vec3.cross([0,0,0], rubiks_cube.cameraFront, rubiks_cube.cameraUp);
+    vec3.normalize(cross, cross);
+    vec3.scale(cross, cross, cameraSpeed);
+
+    if (e.key == 'w')
+        vec3.add(rubiks_cube.cameraPos, rubiks_cube.cameraPos, frontScaled)
+    else if (e.key == 's')
+        vec3.sub(rubiks_cube.cameraPos, rubiks_cube.cameraPos, frontScaled)
+    else if (e.key == 'a')
+        vec3.sub(rubiks_cube.cameraPos, rubiks_cube.cameraPos, cross)
+    else if (e.key == 'd')
+        vec3.add(rubiks_cube.cameraPos, rubiks_cube.cameraPos, cross)
 });

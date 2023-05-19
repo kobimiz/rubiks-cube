@@ -1,4 +1,4 @@
-import { mat4 } from "gl-matrix";
+import { mat4, vec3, vec4 } from "gl-matrix";
 import { Cube, ColorName } from "./cube";
 
 import Shader from "./shader";
@@ -15,6 +15,8 @@ enum Face {
 class RubiksCube {
     cubes: Cube[];
     cameraPos: Float32Array;
+    cameraFront: Float32Array;
+    cameraUp: Float32Array;
 
     frontFace: Face;
     upFace: Face;
@@ -23,7 +25,9 @@ class RubiksCube {
 
     constructor(size: number, gl: WebGL2RenderingContext, shader: Shader) {
         this.cubes = [];
-        this.cameraPos = new Float32Array([0, 0, 3]);
+        this.cameraPos = new Float32Array([0, 0, 9]);
+        this.cameraFront = new Float32Array([0, 0, -1]);
+        this.cameraUp = new Float32Array([0, 1, 0]);
 
         this.frontFace = Face.FRONT;
         this.upFace = Face.UP;
@@ -116,9 +120,12 @@ class RubiksCube {
 
         let camX = Math.sin(1.2) * radius;
         let camZ = Math.cos(1.2) * radius;
-
         let view = mat4.create();
-        mat4.lookAt(view, [camX,0,camZ], [0,0,0], [0,1,0]);
+        let res = vec3.add([0,0,0], this.cameraPos, this.cameraFront);
+        
+        // [9.3, 0, 3.6]
+        // mat4.lookAt(view, [camX,0,camZ], [0,0,0], [0,1,0]);
+        mat4.lookAt(view, this.cameraPos, res, this.cameraUp);
 
         // let rotated_view = mat4.create();
         // mat4.lookAt(rotated_view, [camX,0,camZ], [0,0,0], [0,1,0]);
