@@ -58,7 +58,7 @@ class Cube {
         this.scale = new Float32Array(scale);
         
         this.rotationMatrix = mat4.create();
-        
+
         this.selected = false;
 
         // back, front, left, right, down, up
@@ -114,19 +114,9 @@ class Cube {
         this.gl.bindVertexArray(this.vao);
         for (let i = 0; i < 1; i++) {
             let model = mat4.create();
-            // model = glm::translate(model, cubePositions[i]);
-            // float angle = 20.0f * i;/
-            // model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
             mat4.scale(model, model, this.scale);
             mat4.translate(model, model, this.pos);
-
-            // mat4.rotate(
-            //     model,
-            //     model,
-            //     (Math.sin(new Date().getTime() / 1000) + 1) * Math.PI / 2,
-            //     [0.3, 0.7, 0.1]
-            // );
 
             this.shader.setMat4("model", model);
             
@@ -136,6 +126,7 @@ class Cube {
 
     rotate(mat: mat4) {
         mat4.multiply(this.rotationMatrix, mat, this.rotationMatrix);
+        // mat4.multiply(this.rotationMatrix, this.rotationMatrix, mat);
     }
 
     select(on: boolean) {
