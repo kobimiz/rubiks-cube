@@ -97,7 +97,7 @@ class RubiksCube {
             if (face_color_map.left.includes(i))
                 color.left = CubeColors.left;
             
-            this.cubes.push(new Cube(gl, shader, [x, y, z] ,scale, color));
+            this.cubes.push(new Cube(gl, shader, shader, [x, y, z] ,scale, color));
         }
     }
 
@@ -275,6 +275,31 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), [0,0,1])
         
         this.animation = this.gen_animation(back, 10, rotation, back_mapping);
+    }
+
+    highlightFace(face: Face) {
+        let back  = [0,1,2,3,4,5,6,7,8];
+        let front = [18,19,20,21,22,23,24,25,26];
+        let down  = [0,1,2,9,10,11,18,19,20];
+        let left  = [0,3,6,9,12,15,18,21,24];
+        let up    = [6,7 ,8 ,15,16,17,24,25,26];
+        let right = [2 ,5 ,8,11,14,17,20,23,26];
+
+        switch (face) {
+            case Face.FRONT:
+                // back.forEach(i => this.cubes[i].outline(true))
+                break;
+            case Face.BACK:
+                break;
+            case Face.UP:
+                break;
+            case Face.DOWN:
+                break;
+            case Face.RIGHT:
+                break;
+            case Face.LEFT:
+                break;
+        }
     }
 }
 

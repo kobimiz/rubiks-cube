@@ -1,4 +1,4 @@
-import { mat4 } from "gl-matrix";
+import { mat4, vec3 } from "gl-matrix";
 import Shader from "./shader";
 
 const Color = [
@@ -39,6 +39,7 @@ class Cube {
     vao: WebGLVertexArrayObject | null;
     vboColor: WebGLBuffer | null;
     shader: Shader;
+    shader2: Shader;
 
     pos: Float32Array;
     scale: Float32Array;
@@ -46,10 +47,12 @@ class Cube {
     rotationMatrix: mat4;
 
     selected: boolean;
+    outlined: boolean;
 
-    constructor(gl: WebGL2RenderingContext, shader: Shader, pos: Array<number>, scale: Array<number>, color: CubeColors) {
+    constructor(gl: WebGL2RenderingContext, shader: Shader, shader2: Shader, pos: Array<number>, scale: Array<number>, color: CubeColors) {
         this.gl = gl;
         this.shader = shader;
+        this.shader2 = shader2;
 
         this.vao = gl.createVertexArray();
         this.vboColor = gl.createBuffer();
@@ -60,6 +63,7 @@ class Cube {
         this.rotationMatrix = mat4.create();
 
         this.selected = false;
+        this.outlined = false;
 
         // back, front, left, right, down, up
         let color_buffer = new Float32Array([
@@ -82,16 +86,11 @@ class Cube {
 
         gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 4 * 4, 0 * 4);
         gl.enableVertexAttribArray(1);
-
-        // textures...
-        shader.use();
-        // shader.setNumber("texture1");
     }
 
-    draw(view: mat4) {
-        this.shader.use();
-        
-        // let view       = mat4.create();
+    draw(view: mat4) {   
+        this.gl.bindVertexArray(this.vao);
+
         let projection = mat4.create();
         mat4.perspective(
             projection,
@@ -100,37 +99,59 @@ class Cube {
             0.1,
             100.0
         );
-
-        // mat4.translate(view, view, this.pos);
-        // projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        // view       = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+        
+        let model = mat4.create();
+        mat4.scale(model, model, this.scale);
+        mat4.translate(model, model, this.pos);
+        
         // pass transformation matrices to the shader
+        this.shader.use();
         this.shader.setMat4("view", view);
         this.shader.setMat4("projection", projection);
         this.shader.setMat4("rotation", this.rotationMatrix);
         this.shader.setBool("selected", this.selected);
-    
-        // render boxes
-        this.gl.bindVertexArray(this.vao);
-        for (let i = 0; i < 1; i++) {
+        this.shader.setMat4("model", model);
+
+        this.gl.stencilFunc(this.gl.ALWAYS, 1, 0xff);
+        this.gl.stencilMask(0xff);
+
+        this.gl.drawArrays(this.gl.TRIANGLES, 0, 36);
+
+        if (this.outlined) {
             let model = mat4.create();
-
-            mat4.scale(model, model, this.scale);
+            mat4.scale(model, model, vec3.scale([0,0,0], this.scale, 1.05));
             mat4.translate(model, model, this.pos);
+    
+            this.shader2.use();
+            this.shader2.setMat4("view", view);
+            this.shader2.setMat4("projection", projection);
+            this.shader2.setMat4("rotation", this.rotationMatrix);
+            this.shader2.setBool("selected", this.selected);
+            this.shader2.setMat4("model", model);
 
-            this.shader.setMat4("model", model);
-            
+            this.gl.stencilFunc(this.gl.NOTEQUAL, 1, 0xFF);
+            this.gl.stencilMask(0x00);
+            this.gl.disable(this.gl.DEPTH_TEST);
+
             this.gl.drawArrays(this.gl.TRIANGLES, 0, 36);
+
+            this.gl.stencilMask(0xFF);
+            this.gl.stencilFunc(this.gl.ALWAYS, 0, 0xFF);
+            this.gl.enable(this.gl.DEPTH_TEST);
         }
+        
     }
 
     rotate(mat: mat4) {
         mat4.multiply(this.rotationMatrix, mat, this.rotationMatrix);
-        // mat4.multiply(this.rotationMatrix, this.rotationMatrix, mat);
     }
 
     select(on: boolean) {
         this.selected = on;
+    }
+
+    outline(on: boolean) {
+        this.outlined = on;
     }
 
     static init(gl: WebGL2RenderingContext) {
@@ -195,56 +216,5 @@ Cube.vertices = new Float32Array([
     -0.5,  0.5,  0.5,
     -0.5,  0.5, -0.5,
 ]);
-
-Cube.colors = new Float32Array([
-    // back
-    -0.5, -0.5, -0.5,
-     0.5, -0.5, -0.5,
-     0.5,  0.5, -0.5,
-     0.5,  0.5, -0.5,
-    -0.5,  0.5, -0.5,
-    -0.5, -0.5, -0.5,
-
-    // front
-    -0.5, -0.5,  0.5,
-     0.5, -0.5,  0.5,
-     0.5,  0.5,  0.5,
-     0.5,  0.5,  0.5,
-    -0.5,  0.5,  0.5,
-    -0.5, -0.5,  0.5,
-
-    // left
-    -0.5,  0.5,  0.5,
-    -0.5,  0.5, -0.5,
-    -0.5, -0.5, -0.5,
-    -0.5, -0.5, -0.5,
-    -0.5, -0.5,  0.5,
-    -0.5,  0.5,  0.5,
-
-    // right
-     0.5,  0.5,  0.5,
-     0.5,  0.5, -0.5,
-     0.5, -0.5, -0.5,
-     0.5, -0.5, -0.5,
-     0.5, -0.5,  0.5,
-     0.5,  0.5,  0.5,
-
-    // down
-    -0.5, -0.5, -0.5,
-     0.5, -0.5, -0.5,
-     0.5, -0.5,  0.5,
-     0.5, -0.5,  0.5,
-    -0.5, -0.5,  0.5,
-    -0.5, -0.5, -0.5,
-
-    // up
-    -0.5,  0.5, -0.5,
-     0.5,  0.5, -0.5,
-     0.5,  0.5,  0.5,
-     0.5,  0.5,  0.5,
-    -0.5,  0.5,  0.5,
-    -0.5,  0.5, -0.5,
-]);
-
 
 export { Cube, Color, ColorName, CubeColors };
