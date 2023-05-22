@@ -26,7 +26,7 @@ class RubiksCube {
 
     animation: (() => void) | null;
 
-    constructor(size: number, gl: WebGL2RenderingContext, shader: Shader) {
+    constructor(size: number, gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader) {
         this.cubes = [];
         this.cameraPos = new Float32Array([4, 3, 7]);
         this.cameraFront = new Float32Array([0, 0, -1]);
@@ -97,7 +97,7 @@ class RubiksCube {
             if (face_color_map.left.includes(i))
                 color.left = CubeColors.left;
             
-            this.cubes.push(new Cube(gl, shader, shader, [x, y, z] ,scale, color));
+            this.cubes.push(new Cube(gl, shader, shader_outline, [x, y, z] ,scale, color));
         }
     }
 
@@ -287,17 +287,22 @@ class RubiksCube {
 
         switch (face) {
             case Face.FRONT:
-                // back.forEach(i => this.cubes[i].outline(true))
+                front.forEach(i => this.cubes[i].outline(true))
                 break;
             case Face.BACK:
+                back.forEach(i => this.cubes[i].outline(true))
                 break;
             case Face.UP:
+                up.forEach(i => this.cubes[i].outline(true))
                 break;
             case Face.DOWN:
+                down.forEach(i => this.cubes[i].outline(true))
                 break;
             case Face.RIGHT:
+                right.forEach(i => this.cubes[i].outline(true))
                 break;
             case Face.LEFT:
+                left.forEach(i => this.cubes[i].outline(true))
                 break;
         }
     }

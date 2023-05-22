@@ -39,7 +39,7 @@ class Cube {
     vao: WebGLVertexArrayObject | null;
     vboColor: WebGLBuffer | null;
     shader: Shader;
-    shader2: Shader;
+    shader_outline: Shader;
 
     pos: Float32Array;
     scale: Float32Array;
@@ -49,10 +49,10 @@ class Cube {
     selected: boolean;
     outlined: boolean;
 
-    constructor(gl: WebGL2RenderingContext, shader: Shader, shader2: Shader, pos: Array<number>, scale: Array<number>, color: CubeColors) {
+    constructor(gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader, pos: Array<number>, scale: Array<number>, color: CubeColors) {
         this.gl = gl;
         this.shader = shader;
-        this.shader2 = shader2;
+        this.shader_outline = shader_outline;
 
         this.vao = gl.createVertexArray();
         this.vboColor = gl.createBuffer();
@@ -101,8 +101,8 @@ class Cube {
         );
         
         let model = mat4.create();
-        mat4.scale(model, model, this.scale);
         mat4.translate(model, model, this.pos);
+        mat4.scale(model, model, this.scale);
         
         // pass transformation matrices to the shader
         this.shader.use();
@@ -112,32 +112,32 @@ class Cube {
         this.shader.setBool("selected", this.selected);
         this.shader.setMat4("model", model);
 
-        this.gl.stencilFunc(this.gl.ALWAYS, 1, 0xff);
-        this.gl.stencilMask(0xff);
+        if (this.outlined) {
+            this.gl.stencilFunc(this.gl.ALWAYS, 1, 0xff);
+            this.gl.stencilMask(0xff);
+        }
 
         this.gl.drawArrays(this.gl.TRIANGLES, 0, 36);
 
         if (this.outlined) {
             let model = mat4.create();
-            mat4.scale(model, model, vec3.scale([0,0,0], this.scale, 1.05));
             mat4.translate(model, model, this.pos);
+            mat4.scale(model, model, vec3.scale([0,0,0], this.scale, 1.1));
     
-            this.shader2.use();
-            this.shader2.setMat4("view", view);
-            this.shader2.setMat4("projection", projection);
-            this.shader2.setMat4("rotation", this.rotationMatrix);
-            this.shader2.setBool("selected", this.selected);
-            this.shader2.setMat4("model", model);
+            this.shader_outline.use();
+            this.shader_outline.setMat4("view", view);
+            this.shader_outline.setMat4("projection", projection);
+            this.shader_outline.setMat4("rotation", this.rotationMatrix);
+            this.shader_outline.setBool("selected", this.selected);
+            this.shader_outline.setMat4("model", model);
 
             this.gl.stencilFunc(this.gl.NOTEQUAL, 1, 0xFF);
             this.gl.stencilMask(0x00);
-            this.gl.disable(this.gl.DEPTH_TEST);
 
             this.gl.drawArrays(this.gl.TRIANGLES, 0, 36);
 
             this.gl.stencilMask(0xFF);
             this.gl.stencilFunc(this.gl.ALWAYS, 0, 0xFF);
-            this.gl.enable(this.gl.DEPTH_TEST);
         }
         
     }
