@@ -68,7 +68,6 @@ document.addEventListener('keydown', e => {
     else if (e.key == 'ArrowDown')
         rubiks_cube.turnX(false);
 
-    console.log(rubiks_cube.permutor.obj);
 });
 console.log(rubiks_cube)
 

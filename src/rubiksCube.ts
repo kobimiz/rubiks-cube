@@ -338,12 +338,12 @@ class RubiksCube {
             clearTimeout(this.timeout);
             this.cubes.forEach(cube => cube.outline(false));
         }
-        this.highlightFace(f_face_string, true);
+        // this.highlightFace(f_face_string, true);
     
-        this.timeout = setTimeout(() => {
-            this.highlightFace(f_face_string, false);
-            this.timeout = -1;
-        }, 1000) as unknown as number;
+        // this.timeout = setTimeout(() => {
+        //     this.highlightFace(f_face_string, false);
+        //     this.timeout = -1;
+        // }, 1000) as unknown as number;
     }
     
     do_x(inverse: boolean) {
@@ -358,12 +358,12 @@ class RubiksCube {
             clearTimeout(this.timeout);
             this.cubes.forEach(cube => cube.outline(false));
         }
-        this.highlightFace(f_face_string, true);
+        // this.highlightFace(f_face_string, true);
     
-        this.timeout = setTimeout(() => {
-            this.highlightFace(f_face_string, false);
-            this.timeout = -1;
-        }, 1000) as unknown as number;
+        // this.timeout = setTimeout(() => {
+        //     this.highlightFace(f_face_string, false);
+        //     this.timeout = -1;
+        // }, 1000) as unknown as number;
     
         return true;
     }
