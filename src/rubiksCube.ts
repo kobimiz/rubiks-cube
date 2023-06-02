@@ -136,53 +136,19 @@ class RubiksCube {
             
             this.cubes.push(new Cube(gl, shader, shader_outline, [x, y, z] ,scale, color, i));
         }
-
-        // this.do_y(false);
     }
 
     draw() {
         if (this.animation !== null) {
             this.animation();
         }
-        // let cameraTarget = [0,0,0];
-        // let cameraDir = new Float32Array(cameraTarget);
-        // vec3.sub(cameraDir, this.cameraPos, cameraDir);
-        // vec3.normalize(cameraDir, cameraDir);
-
-        // let up = new Float32Array([0,1,0]);
-        // let cameraRight = vec3.create();
-        // vec3.cross(up, up, cameraDir);
-        // vec3.normalize(cameraRight, up);
-
-        // let cameraUp = vec3.create();
-        // vec3.cross(cameraUp, cameraDir, cameraRight);
-
-        let radius = 10.0;
-        let time = new Date().getTime() / 1000;
-        let camX = Math.sin(time) * radius;
-        let camZ = Math.cos(time) * radius;
-
-        // let camX = Math.sin(1.2) * radius;
-        // let camZ = Math.cos(1.2) * radius;
         let view = mat4.create();
-        // let res = vec3.add([0,0,0], this.cameraPos, this.cameraFront);
-        
-        // mat4.lookAt(view, [camX,0,camZ], [0,0,0], [0,1,0]);
         mat4.lookAt(view, this.cameraPos, [0,0,0], this.cameraUp);
-
-        // let rotated_view = mat4.create();
-        // mat4.lookAt(rotated_view, [camX,0,camZ], [0,0,0], [0,1,0]);
-        // mat4.rotate(rotated_view, rotated_view, (Math.sin(time) + 1) * Math.PI / 2, [1,0,0]);
-        // let rotation = mat4.create();
-        // mat4.rotate(rotation, rotation, 0.1, [1,0,0])
-
-        // mat4.translate(rotated_view, rotated_view, [0,-1,0]);
 
         let q = quat.create();
         quat.fromEuler(q, this.pitch, this.yaw, this.roll);
         let m = mat4.create();
         mat4.fromQuat(m, q);
-
         mat4.mul(view, view, m);
 
         this.cubes.forEach((cube, i) => {
@@ -203,7 +169,6 @@ class RubiksCube {
             if (frame > frame_count) {
                 // wrap up animation by updating indices
                 this.animation = null;
-                console.log('finishing animation', indices, end_mapping);
                 let temp_vals : {[key: number]: Cube} = {};
 
                 if (inverse) {
@@ -234,7 +199,6 @@ class RubiksCube {
     // (since it is the same on all faces, expect ccw perms)
     turnRight(inverse: boolean = false) {
         if (this.animation !== null) return;
-        console.log('turning Right', inverse ? '(prime)':'')
         let right         = [2 ,5 ,8,11,14,17,20,23,26];
         let right_mapping = [20,11,2,23,14,5 ,26,17,8 ];
         
@@ -251,7 +215,6 @@ class RubiksCube {
 
     turnUp(inverse: boolean = false) {
         if (this.animation !== null) return;
-        console.log('turning Up', inverse ? '(prime)':'')
         let up         = [6,7 ,8 ,15,16,17,24,25,26];
         let up_mapping = [8,17,26,7 ,16,25,6 ,15,24];
         
@@ -268,7 +231,6 @@ class RubiksCube {
 
     turnLeft(inverse: boolean = false) {
         if (this.animation !== null) return;
-        console.log('turning Left', inverse ? '(prime)':'')
         let left         = [0,3,6,9,12,15,18,21,24];
         let left_mapping = [6,15,24,3,12,21,0,9,18];
         
@@ -285,7 +247,6 @@ class RubiksCube {
 
     turnDown(inverse: boolean = false) {
         if (this.animation !== null) return;
-        console.log('turning Down', inverse ? '(prime)':'')
         let down         = [0,1,2,9,10,11,18,19,20];
         let down_mapping = [18,9,0,19,10,1,20,11,2];
         
@@ -302,7 +263,6 @@ class RubiksCube {
 
     turnFront(inverse: boolean = false) {
         if (this.animation !== null) return;
-        console.log('turning Front', inverse ? '(prime)':'not prime')
         let front         = [18,19,20,21,22,23,24,25,26];
         let front_mapping = [24,21,18,25,22,19,26,23,20];
         
@@ -319,7 +279,6 @@ class RubiksCube {
 
     turnBack(inverse: boolean = false) {
         if (this.animation !== null) return;
-        console.log('turning Back', inverse ? '(prime)':'')
         let back         = [0,1,2,3,4,5,6,7,8];
         let back_mapping = [2,5,8,1,4,7,0,3,6];
         
@@ -345,13 +304,9 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, -Math.PI / (10 * 2), [1,0,0]);
 
         let all = [...Array(27).keys()];
-        // let all_mapping = [...Array(27).keys()];
         let all_mapping = [18,19,20,9,10,11,0,1,2,21,22,23,12,13,14,3,4,5,24,25,26,15,16,17,6,7,8];
 
         this.animation = this.gen_animation(all, 10, rotation, all_mapping, rubiks_cube => {
-            // vec3.rotateX(rubiks_cube.xAxis, rubiks_cube.xAxis, [0,0,0], -Math.PI / 2);
-            // vec3.rotateX(rubiks_cube.yAxis, rubiks_cube.yAxis, [0,0,0], -Math.PI / 2);
-            // vec3.rotateX(rubiks_cube.zAxis, rubiks_cube.zAxis, [0,0,0], -Math.PI / 2);
         }, inverse);
     }
 
@@ -368,14 +323,10 @@ class RubiksCube {
             let all = [...Array(27).keys()];
             let all_mapping = [2,11,20,5,14,23,8,17,26,1,10,19,4,13,22,7,16,25,0,9,18,3,12,21,6,15,24];
         this.animation = this.gen_animation(all, 10, rotation, all_mapping, rubiks_cube => {
-            // vec3.rotateY(rubiks_cube.xAxis, rubiks_cube.xAxis, [0,0,0], -Math.PI / 2);
-            // vec3.rotateY(rubiks_cube.yAxis, rubiks_cube.yAxis, [0,0,0], -Math.PI / 2);
-            // vec3.rotateY(rubiks_cube.zAxis, rubiks_cube.zAxis, [0,0,0], -Math.PI / 2);
         }, inverse);
     }
 
     do_y(inverse: boolean) {
-        console.log('did y')
         if (inverse)
             this.permutor.ccw_perm(['f', 'l', 'b', 'r']);
         else
@@ -396,7 +347,6 @@ class RubiksCube {
     }
     
     do_x(inverse: boolean) {
-        console.log('did x')
         if (inverse)
             this.permutor.ccw_perm(['f', 'u', 'b', 'd']);
         else

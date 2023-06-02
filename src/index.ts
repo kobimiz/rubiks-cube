@@ -40,31 +40,12 @@ function draw(gl: WebGL2RenderingContext) {
     mat4.fromQuat(m, q);
     mat4.mul(view, view, m);
 
-    // axes.x.draw(view);
-    // axes.y.draw(view);
-    // axes.z.draw(view);
-    // arrows.x.draw(view);
-    // arrows.y.draw(view);
-    // arrows.z.draw(view);
-    // let direction = new Float32Array([
-    //     Math.cos(glMatrix.toRadian(rubiks_cube.yaw)) * Math.cos(glMatrix.toRadian(rubiks_cube.pitch)),
-    //     Math.sin(glMatrix.toRadian(rubiks_cube.pitch)),
-    //     Math.sin(glMatrix.toRadian(rubiks_cube.yaw)) * Math.cos(glMatrix.toRadian(rubiks_cube.pitch)),
-    // ]);
-    // // camera distance from 0,0,0: sqrt(74)
-    // let dist = Math.sqrt(74);
-    // vec3.normalize(direction, direction);
-    // vec3.add(rubiks_cube.cameraPos, [0,0,0], direction);
-    // let len = vec3.length(rubiks_cube.cameraPos);
-    // vec3.scale(rubiks_cube.cameraPos, rubiks_cube.cameraPos, dist / len);
-
     rubiks_cube.draw();
 }
 
 setInterval(draw, time_delta, gl);
 
 document.addEventListener('keydown', e => {
-    // let side_to_rotate = rubiks_cube.permutor.obj[e.key.toLowerCase() as 'f'];
     let side_to_rotate = e.key.toLowerCase();
     if (side_to_rotate == 'r')
         rubiks_cube.turnRight(e.shiftKey);
