@@ -49,7 +49,10 @@ class Cube {
     selected: boolean;
     outlined: boolean;
 
-    constructor(gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader, pos: Array<number>, scale: Array<number>, color: CubeColors) {
+    id: number;
+    constructor(gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader, pos: Array<number>,
+                scale: Array<number>, color: CubeColors, id: number) {
+        this.id = id;
         this.gl = gl;
         this.shader = shader;
         this.shader_outline = shader_outline;
