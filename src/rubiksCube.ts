@@ -52,6 +52,8 @@ class RubiksCube {
 
     animation: (() => void) | null;
 
+    actionQueue: (() => void)[];
+
     constructor(size: number, gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader) {
         this.cubes = [];
         this.cameraPos = new Float32Array([7, 4, 5]);
@@ -78,6 +80,7 @@ class RubiksCube {
         });
 
         this.animation = null;
+        this.actionQueue = [];
 
         let scale = [1.0, 1.0, 1.0];
 
@@ -139,9 +142,15 @@ class RubiksCube {
     }
 
     draw() {
+        if (this.animation == null) {
+            if (this.actionQueue.length > 0)
+                this.animation = this.actionQueue.shift() as () => void;
+        }
+
         if (this.animation !== null) {
             this.animation();
         }
+        
         let view = mat4.create();
         mat4.lookAt(view, this.cameraPos, [0,0,0], this.cameraUp);
 
@@ -198,7 +207,6 @@ class RubiksCube {
     // TODO refactor mapping to two isomorphic permutation
     // (since it is the same on all faces, expect ccw perms)
     turnRight(inverse: boolean = false) {
-        if (this.animation !== null) return;
         let right         = [2 ,5 ,8,11,14,17,20,23,26];
         let right_mapping = [20,11,2,23,14,5 ,26,17,8 ];
         
@@ -209,12 +217,11 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.xAxis)
         else 
             mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.xAxis)
-        
-        this.animation = this.gen_animation(right, 10, rotation, right_mapping, null, inverse);
+
+        this.actionQueue.push(this.gen_animation(right, 10, rotation, right_mapping, null, inverse))
     }
 
     turnUp(inverse: boolean = false) {
-        if (this.animation !== null) return;
         let up         = [6,7 ,8 ,15,16,17,24,25,26];
         let up_mapping = [8,17,26,7 ,16,25,6 ,15,24];
         
@@ -226,11 +233,10 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.yAxis)
         
-        this.animation = this.gen_animation(up, 10, rotation, up_mapping, null, inverse);
+        this.actionQueue.push(this.gen_animation(up, 10, rotation, up_mapping, null, inverse));
     }
 
     turnLeft(inverse: boolean = false) {
-        if (this.animation !== null) return;
         let left         = [0,3,6,9,12,15,18,21,24];
         let left_mapping = [6,15,24,3,12,21,0,9,18];
         
@@ -242,11 +248,10 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.xAxis)
         
-        this.animation = this.gen_animation(left, 10, rotation, left_mapping, null, inverse);
+        this.actionQueue.push(this.gen_animation(left, 10, rotation, left_mapping, null, inverse));
     }
 
     turnDown(inverse: boolean = false) {
-        if (this.animation !== null) return;
         let down         = [0,1,2,9,10,11,18,19,20];
         let down_mapping = [18,9,0,19,10,1,20,11,2];
         
@@ -258,11 +263,10 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.yAxis)
         
-        this.animation = this.gen_animation(down, 10, rotation, down_mapping, null, inverse);
+        this.actionQueue.push(this.gen_animation(down, 10, rotation, down_mapping, null, inverse));
     }
 
     turnFront(inverse: boolean = false) {
-        if (this.animation !== null) return;
         let front         = [18,19,20,21,22,23,24,25,26];
         let front_mapping = [24,21,18,25,22,19,26,23,20];
         
@@ -274,11 +278,10 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.zAxis)
         
-        this.animation = this.gen_animation(front, 10, rotation, front_mapping, null, inverse);
+        this.actionQueue.push(this.gen_animation(front, 10, rotation, front_mapping, null, inverse));
     }
 
     turnBack(inverse: boolean = false) {
-        if (this.animation !== null) return;
         let back         = [0,1,2,3,4,5,6,7,8];
         let back_mapping = [2,5,8,1,4,7,0,3,6];
         
@@ -290,12 +293,10 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.zAxis)
         
-        this.animation = this.gen_animation(back, 10, rotation, back_mapping, null, inverse);
+        this.actionQueue.push(this.gen_animation(back, 10, rotation, back_mapping, null, inverse));
     }
 
     turnX(inverse: boolean = false) {
-        if (this.animation !== null) return;
-
         let rotation = mat4.create();
         this.do_x(inverse);
         if (inverse)
@@ -306,13 +307,10 @@ class RubiksCube {
         let all = [...Array(27).keys()];
         let all_mapping = [18,19,20,9,10,11,0,1,2,21,22,23,12,13,14,3,4,5,24,25,26,15,16,17,6,7,8];
 
-        this.animation = this.gen_animation(all, 10, rotation, all_mapping, rubiks_cube => {
-        }, inverse);
+        this.actionQueue.push(this.gen_animation(all, 10, rotation, all_mapping, rubiks_cube => {}, inverse));
     }
 
     turnY(inverse: boolean = false) {
-        if (this.animation !== null) return;
-
         let rotation = mat4.create();
         this.do_y(inverse);
         if (inverse)
@@ -320,10 +318,9 @@ class RubiksCube {
         else
             mat4.rotate(rotation, rotation, -Math.PI / (10 * 2), [0,1,0]);
 
-            let all = [...Array(27).keys()];
-            let all_mapping = [2,11,20,5,14,23,8,17,26,1,10,19,4,13,22,7,16,25,0,9,18,3,12,21,6,15,24];
-        this.animation = this.gen_animation(all, 10, rotation, all_mapping, rubiks_cube => {
-        }, inverse);
+        let all = [...Array(27).keys()];
+        let all_mapping = [2,11,20,5,14,23,8,17,26,1,10,19,4,13,22,7,16,25,0,9,18,3,12,21,6,15,24];
+        this.actionQueue.push(this.gen_animation(all, 10, rotation, all_mapping, rubiks_cube => {}, inverse));
     }
 
     do_y(inverse: boolean) {
