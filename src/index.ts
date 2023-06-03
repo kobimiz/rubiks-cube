@@ -6,6 +6,7 @@ import * as borderFrag from './shaders/border-frag';
 import { RubiksCube, Face } from "./rubiksCube";
 import { Cube } from "./cube";
 import { glMatrix, mat4, vec3, quat} from "gl-matrix";
+import { Shuffler } from "./shuffler";
 
 let canvas = document.getElementsByTagName('canvas')[0];
 let gl = canvas.getContext('webgl2', { stencil: true }); // stencil option is important
@@ -43,7 +44,7 @@ function draw(gl: WebGL2RenderingContext) {
     rubiks_cube.draw();
 }
 
-setInterval(draw, time_delta, gl);
+let drawInterval = setInterval(draw, time_delta, gl);
 
 document.addEventListener('keydown', e => {
     let side_to_rotate = e.key.toLowerCase();
@@ -70,6 +71,26 @@ document.addEventListener('keydown', e => {
 
 });
 console.log(rubiks_cube)
+
+let shuffler = new Shuffler(rubiks_cube);
+
+document.getElementById('shuffle')?.addEventListener('click', e => {
+    time_delta /= 3;
+
+    clearInterval(drawInterval);
+    drawInterval = setInterval(() => {
+        draw(gl as WebGL2RenderingContext);
+
+        if (rubiks_cube.animation == null && rubiks_cube.actionQueue.length == 0) {
+            clearInterval(drawInterval);
+
+            time_delta *= 3;
+            drawInterval = setInterval(draw, time_delta, gl) as unknown as NodeJS.Timer;
+        }
+    }, time_delta) as unknown as NodeJS.Timer;
+    console.log(shuffler.shuffle(10));
+    
+});
 
 // document.addEventListener('keydown', e => {
 //     const cameraSpeed = 0.2;
