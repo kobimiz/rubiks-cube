@@ -70,9 +70,12 @@ class FacePermutor {
         if (!perm)
             throw 'Invalid face to permute';
 
-        console.log(perm);
         this.permutor.permute_obj_from_map(perm);
-    }    
+    }
+
+    getFaceIndices(face: Face) {
+        return FacePermutor.faceMap.get(face);
+    }
 };
 
 export { FacePermutor, Face }
