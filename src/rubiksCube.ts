@@ -23,8 +23,6 @@ class RubiksCube {
 
     rubiksCubeLogic: RubiksCubeLogic;
 
-    timeout: number;
-
     animation: (() => void) | null;
     actionQueue: (() => void)[];
 
@@ -41,8 +39,6 @@ class RubiksCube {
         this.xAxis = [1,0,0];
         this.yAxis = [0,1,0];
         this.zAxis = [0,0,1];
-
-        this.timeout = -1;
 
         this.rubiksCubeLogic = new RubiksCubeLogic(this.cubes);
 
@@ -140,9 +136,7 @@ class RubiksCube {
     }
 
     turnRight(inverse: boolean = false) {
-        let right         = [2 ,5 ,8,11,14,17,20,23,26];
-        let right_mapping = [20,11,2,23,14,5 ,26,17,8 ];
-        
+        let right = this.rubiksCubeLogic.getFaceIndices(Face.RIGHT) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -157,10 +151,9 @@ class RubiksCube {
     }
 
     turnUp(inverse: boolean = false) {
-        let up         = [6,7 ,8 ,15,16,17,24,25,26];
-        let up_mapping = [8,17,26,7 ,16,25,6 ,15,24];
-        
+        let up = this.rubiksCubeLogic.getFaceIndices(Face.UP) as number[];
         let frame_count = 10;
+
 
         let rotation = mat4.create();
         if (inverse) 
@@ -174,9 +167,7 @@ class RubiksCube {
     }
 
     turnLeft(inverse: boolean = false) {
-        let left         = [0,3,6,9,12,15,18,21,24];
-        let left_mapping = [6,15,24,3,12,21,0,9,18];
-        
+        let left = this.rubiksCubeLogic.getFaceIndices(Face.LEFT) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -191,9 +182,7 @@ class RubiksCube {
     }
 
     turnDown(inverse: boolean = false) {
-        let down         = [0,1,2,9,10,11,18,19,20];
-        let down_mapping = [18,9,0,19,10,1,20,11,2];
-        
+        let down = this.rubiksCubeLogic.getFaceIndices(Face.DOWN) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -208,9 +197,7 @@ class RubiksCube {
     }
 
     turnFront(inverse: boolean = false) {
-        let front         = [18,19,20,21,22,23,24,25,26];
-        let front_mapping = [24,21,18,25,22,19,26,23,20];
-        
+        let front = this.rubiksCubeLogic.getFaceIndices(Face.FRONT) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -225,9 +212,7 @@ class RubiksCube {
     }
 
     turnBack(inverse: boolean = false) {
-        let back         = [0,1,2,3,4,5,6,7,8];
-        let back_mapping = [2,5,8,1,4,7,0,3,6];
-        
+        let back = this.rubiksCubeLogic.getFaceIndices(Face.BACK) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -243,7 +228,6 @@ class RubiksCube {
 
     turnX(inverse: boolean = false) {
         let rotation = mat4.create();
-        this.do_x(inverse);
         if (inverse)
             mat4.rotate(rotation, rotation, Math.PI / (10 * 2), [1,0,0]);
         else
@@ -266,7 +250,6 @@ class RubiksCube {
 
     turnY(inverse: boolean = false) {
         let rotation = mat4.create();
-        this.do_y(inverse);
         if (inverse)
             mat4.rotate(rotation, rotation, Math.PI / (10 * 2), [0,1,0]);
         else
@@ -286,76 +269,8 @@ class RubiksCube {
         }));
     }
 
-    do_y(inverse: boolean) {
-        // if (inverse)
-        //     this.permutor.ccw_perm(['f', 'l', 'b', 'r']);
-        // else
-        //     this.permutor.cw_perm(['f', 'l', 'b', 'r']);
-    
-        // let f_face_string = face_map[this.permutor.obj['f'] as 'f'];
-    
-        if (this.timeout != -1) {
-            clearTimeout(this.timeout);
-            this.cubes.forEach(cube => cube.outline(false));
-        }
-        // this.highlightFace(f_face_string, true);
-    
-        // this.timeout = setTimeout(() => {
-        //     this.highlightFace(f_face_string, false);
-        //     this.timeout = -1;
-        // }, 1000) as unknown as number;
-    }
-    
-    do_x(inverse: boolean) {
-        // if (inverse)
-        //     this.permutor.ccw_perm(['f', 'u', 'b', 'd']);
-        // else
-        //     this.permutor.cw_perm(['f', 'u', 'b', 'd']);
-    
-        // let f_face_string = face_map[this.permutor.obj['f'] as 'f'];
-    
-        if (this.timeout != -1) {
-            clearTimeout(this.timeout);
-            this.cubes.forEach(cube => cube.outline(false));
-        }
-        // this.highlightFace(f_face_string, true);
-    
-        // this.timeout = setTimeout(() => {
-        //     this.highlightFace(f_face_string, false);
-        //     this.timeout = -1;
-        // }, 1000) as unknown as number;
-    
-        return true;
-    }
-
     highlightFace(face: Face, on: boolean) {
-        let back  = [0,1,2,3,4,5,6,7,8];
-        let front = [18,19,20,21,22,23,24,25,26];
-        let down  = [0,1,2,9,10,11,18,19,20];
-        let left  = [0,3,6,9,12,15,18,21,24];
-        let up    = [6,7 ,8 ,15,16,17,24,25,26];
-        let right = [2 ,5 ,8,11,14,17,20,23,26];
-
-        switch (face) {
-            case Face.FRONT:
-                front.forEach(i => this.cubes[i].outline(on))
-                break;
-            case Face.BACK:
-                back.forEach(i => this.cubes[i].outline(on))
-                break;
-            case Face.UP:
-                up.forEach(i => this.cubes[i].outline(on))
-                break;
-            case Face.DOWN:
-                down.forEach(i => this.cubes[i].outline(on))
-                break;
-            case Face.RIGHT:
-                right.forEach(i => this.cubes[i].outline(on))
-                break;
-            case Face.LEFT:
-                left.forEach(i => this.cubes[i].outline(on))
-                break;
-        }
+        this.rubiksCubeLogic.getFaceIndices(face)?.forEach(i => this.cubes[i].outline(on))
     }
 
     select_by_order(on: boolean) {

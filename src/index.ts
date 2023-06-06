@@ -3,10 +3,11 @@ import Shader from "./shader";
 import * as cubeVertex from './shaders/cube-vert';
 import * as cubeFragment from './shaders/cube-frag';
 import * as borderFrag from './shaders/border-frag';
-import { RubiksCube, Face } from "./rubiksCube";
+import { RubiksCube } from "./rubiksCube";
 import { Cube } from "./cube";
 import { glMatrix, mat4, vec3, quat} from "gl-matrix";
 import { Shuffler } from "./shuffler";
+import { FacePermutor } from "./facePermutor";
 
 let canvas = document.getElementsByTagName('canvas')[0];
 let gl = canvas.getContext('webgl2', { stencil: true }); // stencil option is important
@@ -24,6 +25,8 @@ let shader_outline = new Shader(gl, cubeVertex.default, borderFrag.default);
 shader.use();
 
 Cube.init(gl);
+FacePermutor.init();
+
 let rubiks_cube = new RubiksCube(3, gl, shader, shader_outline)
 
 let fps = 30;
