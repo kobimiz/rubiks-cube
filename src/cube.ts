@@ -1,5 +1,7 @@
 import { mat4, vec3 } from "gl-matrix";
 import Shader from "./shader";
+import { Face } from "./facePermutor";
+import { Permutor } from "./permutor";
 
 const Color = [
     [183/255,18/255,52/255,1],
@@ -48,6 +50,8 @@ class Cube {
 
     selected: boolean;
     outlined: boolean;
+    color: CubeColors;
+    permutor: Permutor;
 
     id: number;
     constructor(gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader, pos: Array<number>,
@@ -56,6 +60,16 @@ class Cube {
         this.gl = gl;
         this.shader = shader;
         this.shader_outline = shader_outline;
+        this.color = color;
+
+        this.permutor = new Permutor({
+            [Face.FRONT]: Face.FRONT,
+            [Face.BACK] : Face.BACK,
+            [Face.RIGHT]: Face.RIGHT,
+            [Face.LEFT] : Face.LEFT,
+            [Face.UP]   : Face.UP,
+            [Face.DOWN] : Face.DOWN,
+        });
 
         this.vao = gl.createVertexArray();
         this.vboColor = gl.createBuffer();
