@@ -12,6 +12,15 @@ class Permutor {
         for (const key in perm)
             this.obj[perm[key]] = copy[key];
     }
+
+    permute_obj_from_map(perm: Map<any, any>) {
+        let copy: any = {};
+        Object.assign(copy, this.obj);
+
+        perm.forEach((value, key) => {
+            this.obj[value] = copy[key];
+        });
+    }
     
     cw_perm(keys: Array<any>) {
         let perm: any = {};
