@@ -2,7 +2,6 @@ import { mat4, quat, vec3 } from "gl-matrix";
 import { Cube, ColorName } from "./cube";
 
 import Shader from "./shader";
-import { Permutor } from "./permutor";
 import { Face } from "./facePermutor";
 import { RubiksCubeLogic } from "./rubiksCubeLogic";
 
@@ -68,26 +67,26 @@ class RubiksCube {
             let y = 1.1 * (Math.floor(i / 3) % 3) - 1.1;
             let z = 1.1 * (Math.floor(i / 9) % 3) - 1.1;
             let color = {
-                front: ColorName.BLACK,
-                up:    ColorName.BLACK,
-                down:  ColorName.BLACK,
-                right: ColorName.BLACK,
-                left:  ColorName.BLACK,
-                back:  ColorName.BLACK,
+                [Face.FRONT]: ColorName.BLACK,
+                [Face.UP]:    ColorName.BLACK,
+                [Face.DOWN]:  ColorName.BLACK,
+                [Face.RIGHT]: ColorName.BLACK,
+                [Face.LEFT]:  ColorName.BLACK,
+                [Face.BACK]:  ColorName.BLACK,
             };
 
             if (backIndices.includes(i))
-                color.back = CubeColors.back;
+                color[Face.BACK] = CubeColors.back;
             if (frontIndices.includes(i))
-                color.front = CubeColors.front;
+                color[Face.FRONT] = CubeColors.front;
             if (upIndices.includes(i))
-                color.up = CubeColors.up;
+                color[Face.UP] = CubeColors.up;
             if (downIndices.includes(i))
-                color.down = CubeColors.down;
+                color[Face.DOWN] = CubeColors.down;
             if (rightIndices.includes(i))
-                color.right = CubeColors.right;
+                color[Face.RIGHT] = CubeColors.right;
             if (leftIndices.includes(i))
-                color.left = CubeColors.left;
+                color[Face.LEFT] = CubeColors.left;
             
             this.cubes.push(new Cube(gl, shader, shader_outline, [x, y, z] ,scale, color, i));
         }

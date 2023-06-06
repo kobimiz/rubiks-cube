@@ -24,12 +24,12 @@ enum ColorName {
 }
 
 type CubeColors = {
-    back: ColorName,
-    front: ColorName,
-    left: ColorName,
-    right: ColorName,
-    down: ColorName,
-    up: ColorName,
+    [Face.BACK]: ColorName,
+    [Face.FRONT]: ColorName,
+    [Face.LEFT]: ColorName,
+    [Face.RIGHT]: ColorName,
+    [Face.DOWN]: ColorName,
+    [Face.UP]: ColorName,
 }
 
 class Cube {
@@ -84,12 +84,12 @@ class Cube {
 
         // back, front, left, right, down, up
         let color_buffer = new Float32Array([
-            Cube.getFaceColor(color.back),
-            Cube.getFaceColor(color.front),
-            Cube.getFaceColor(color.left),
-            Cube.getFaceColor(color.right),
-            Cube.getFaceColor(color.down),
-            Cube.getFaceColor(color.up),
+            Cube.getFaceColor(color[Face.BACK]),
+            Cube.getFaceColor(color[Face.FRONT]),
+            Cube.getFaceColor(color[Face.LEFT]),
+            Cube.getFaceColor(color[Face.RIGHT]),
+            Cube.getFaceColor(color[Face.DOWN]),
+            Cube.getFaceColor(color[Face.UP]),
         ].flat(2));
         
         gl.bindVertexArray(this.vao);

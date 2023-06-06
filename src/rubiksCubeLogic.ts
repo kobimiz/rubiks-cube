@@ -1,4 +1,4 @@
-import { Cube } from "./cube";
+import { ColorName, Cube } from "./cube";
 import { Face, FacePermutor } from "./facePermutor";
 import { Permutor } from "./permutor";
 
@@ -47,6 +47,12 @@ class RubiksCubeLogic {
             obj = Object.fromEntries(all_mapping.map((newI, i) => [newI, i]));
         else
             obj = Object.fromEntries(all_mapping.map((newI, i) => [i, newI]));
+
+        let perm = RubiksCubeLogic.permutorMap[inverse ? Face.LEFT : Face.RIGHT];
+        this.cubes.forEach(cube => {
+            cube.permutor.cw_perm(perm);
+        }); 
+
         this.permutor.permute_obj(obj);
     }
 
@@ -57,11 +63,55 @@ class RubiksCubeLogic {
             obj = Object.fromEntries(all_mapping.map((newI, i) => [newI, i]));
         else
             obj = Object.fromEntries(all_mapping.map((newI, i) => [i, newI]));
+
+        let perm = RubiksCubeLogic.permutorMap[inverse ? Face.DOWN : Face.UP];
+        this.cubes.forEach(cube => {
+            cube.permutor.cw_perm(perm);
+        });
+
         this.permutor.permute_obj(obj);
     }
 
     getFaceIndices(face: Face) {
         return this.facePermutor.getFaceIndices(face);
+    }
+
+    getColors(indices: number[], face: Face) {
+        return this.cubes
+                .filter((cube, i) => indices.includes(i))
+                .map(cube => {
+                    return cube.color[cube.permutor.obj[face] as Face]
+                })
+                .map(color => {
+                    if (color == ColorName.GREEN)
+                        return 'Green'
+                    if (color == ColorName.BLUE)
+                        return 'Blue'
+                    if (color == ColorName.ORANGE)
+                        return 'Orange'
+                    if (color == ColorName.YELLOW)
+                        return 'Yellow'
+                    if (color == ColorName.WHITE)
+                        return 'White'
+                    if (color == ColorName.RED)
+                        return 'Red'
+                        
+                    return 'Black'
+                });
+    }
+
+    isSolved() {
+        let faces = [Face.BACK, Face.FRONT, Face.DOWN, Face.UP, Face.RIGHT, Face.LEFT];
+        let isSolved = true;
+
+        faces.forEach(face => {
+            let indices = this.getFaceIndices(face) as number[];
+            let faceColor = this.cubes[indices[0]].color[face];
+            isSolved = isSolved && indices.every(i => this.cubes[i].color[face] == faceColor);
+            if (!isSolved) return;
+        });
+
+        return isSolved;
     }
 };
 
