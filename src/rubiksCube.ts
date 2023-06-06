@@ -234,17 +234,8 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, -Math.PI / (10 * 2), [1,0,0]);
 
         let all = [...Array(27).keys()];
-        let all_mapping = [18,19,20,9,10,11,0,1,2,21,22,23,12,13,14,3,4,5,24,25,26,15,16,17,6,7,8];
-
-        let obj: object;
-        if (inverse)
-            obj = Object.fromEntries(all_mapping.map((newI, i) => [newI, i]));
-        else
-            obj = Object.fromEntries(all_mapping.map((newI, i) => [i, newI]));
-
-        this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiks_cube => {
-            let perm = new Permutor(rubiks_cube.cubes);
-            perm.permute_obj(obj);
+        this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turnX(inverse); 
         }));
     }
 
@@ -256,16 +247,8 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, -Math.PI / (10 * 2), [0,1,0]);
 
         let all = [...Array(27).keys()];
-        let all_mapping = [2,11,20,5,14,23,8,17,26,1,10,19,4,13,22,7,16,25,0,9,18,3,12,21,6,15,24];
-        let obj: object;
-        if (inverse)
-            obj = Object.fromEntries(all_mapping.map((newI, i) => [newI, i]));
-        else
-            obj = Object.fromEntries(all_mapping.map((newI, i) => [i, newI]));
-
-        this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiks_cube => {
-            let perm = new Permutor(rubiks_cube.cubes);
-            perm.permute_obj(obj);
+        this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turnY(inverse); 
         }));
     }
 
