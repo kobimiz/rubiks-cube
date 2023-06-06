@@ -32,6 +32,8 @@ let rubiks_cube = new RubiksCube(3, gl, shader, shader_outline)
 let fps = 30;
 let time_delta = 1000 / fps;
 
+let messageElement = document.getElementById('message') as HTMLElement;
+
 function draw(gl: WebGL2RenderingContext) {
     gl.clearColor(0.2, 0.3, 0.3, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
@@ -45,6 +47,9 @@ function draw(gl: WebGL2RenderingContext) {
     mat4.mul(view, view, m);
 
     rubiks_cube.draw();
+
+    if (rubiks_cube.isSolved)
+        messageElement.textContent = 'Solved! Horray!';
 }
 
 let drawInterval = setInterval(draw, time_delta, gl);
@@ -71,7 +76,6 @@ document.addEventListener('keydown', e => {
         rubiks_cube.turnX(true);
     else if (e.key == 'ArrowDown')
         rubiks_cube.turnX(false);
-
 });
 console.log(rubiks_cube)
 

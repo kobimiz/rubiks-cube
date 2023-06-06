@@ -25,6 +25,8 @@ class RubiksCube {
     animation: (() => void) | null;
     actionQueue: (() => void)[];
 
+    isSolved: boolean;
+
     constructor(size: number, gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader) {
         this.cubes = [];
         this.cameraPos = new Float32Array([7, 4, 5]);
@@ -43,6 +45,8 @@ class RubiksCube {
 
         this.animation = null;
         this.actionQueue = [];
+
+        this.isSolved = false; // technically it is...
 
         let scale = [1.0, 1.0, 1.0];
 
@@ -145,7 +149,8 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.xAxis)
 
         this.actionQueue.push(this.gen_animation(right, 10, rotation, rubiksCube => {
-            rubiksCube.rubiksCubeLogic.turn(Face.RIGHT, inverse); 
+            rubiksCube.rubiksCubeLogic.turn(Face.RIGHT, inverse);
+            rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }))
     }
 
@@ -161,7 +166,8 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.yAxis)
         
         this.actionQueue.push(this.gen_animation(up, 10, rotation, rubiksCube => {
-            rubiksCube.rubiksCubeLogic.turn(Face.UP, inverse); 
+            rubiksCube.rubiksCubeLogic.turn(Face.UP, inverse);
+            rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
     }
 
@@ -176,7 +182,8 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.xAxis)
         
         this.actionQueue.push(this.gen_animation(left, 10, rotation, rubiksCube => {
-            rubiksCube.rubiksCubeLogic.turn(Face.LEFT, inverse); 
+            rubiksCube.rubiksCubeLogic.turn(Face.LEFT, inverse);
+            rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
     }
 
@@ -191,7 +198,8 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.yAxis)
         
         this.actionQueue.push(this.gen_animation(down, 10, rotation, rubiksCube => {
-            rubiksCube.rubiksCubeLogic.turn(Face.DOWN, inverse); 
+            rubiksCube.rubiksCubeLogic.turn(Face.DOWN, inverse);
+            rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
     }
 
@@ -206,7 +214,8 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.zAxis)
         
         this.actionQueue.push(this.gen_animation(front, 10, rotation, rubiksCube => {
-            rubiksCube.rubiksCubeLogic.turn(Face.FRONT, inverse); 
+            rubiksCube.rubiksCubeLogic.turn(Face.FRONT, inverse);
+            rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
     }
 
@@ -221,7 +230,8 @@ class RubiksCube {
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.zAxis)
         
         this.actionQueue.push(this.gen_animation(back, 10, rotation, rubiksCube => {
-            rubiksCube.rubiksCubeLogic.turn(Face.BACK, inverse); 
+            rubiksCube.rubiksCubeLogic.turn(Face.BACK, inverse);
+            rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
     }
 

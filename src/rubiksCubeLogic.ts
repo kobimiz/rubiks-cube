@@ -82,22 +82,6 @@ class RubiksCubeLogic {
                 .map(cube => {
                     return cube.color[cube.permutor.obj[face] as Face]
                 })
-                .map(color => {
-                    if (color == ColorName.GREEN)
-                        return 'Green'
-                    if (color == ColorName.BLUE)
-                        return 'Blue'
-                    if (color == ColorName.ORANGE)
-                        return 'Orange'
-                    if (color == ColorName.YELLOW)
-                        return 'Yellow'
-                    if (color == ColorName.WHITE)
-                        return 'White'
-                    if (color == ColorName.RED)
-                        return 'Red'
-                        
-                    return 'Black'
-                });
     }
 
     isSolved() {
@@ -106,8 +90,10 @@ class RubiksCubeLogic {
 
         faces.forEach(face => {
             let indices = this.getFaceIndices(face) as number[];
-            let faceColor = this.cubes[indices[0]].color[face];
-            isSolved = isSolved && indices.every(i => this.cubes[i].color[face] == faceColor);
+            let faceColors = this.getColors(indices, face);
+            let faceColor = faceColors[0];
+
+            isSolved = isSolved && faceColors.every(color => color == faceColor);
             if (!isSolved) return;
         });
 
