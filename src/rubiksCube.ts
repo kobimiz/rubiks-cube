@@ -3,33 +3,8 @@ import { Cube, ColorName } from "./cube";
 
 import Shader from "./shader";
 import { Permutor } from "./permutor";
-
-enum Face {
-    RIGHT,
-    LEFT,
-    UP,
-    DOWN,
-    BACK,
-    FRONT
-};
-
-let face_map = {
-    'f': Face.FRONT,
-    'b': Face.BACK,
-    'r': Face.RIGHT,
-    'l': Face.LEFT,
-    'u': Face.UP,
-    'd': Face.DOWN,
-};
-
-type RotationMap = {
-    'f': string,
-    'b': string,
-    'r': string,
-    'l': string,
-    'u': string,
-    'd': string,
-}
+import { Face } from "./facePermutor";
+import { RubiksCubeLogic } from "./rubiksCubeLogic";
 
 class RubiksCube {
     cubes: Cube[];
@@ -46,12 +21,11 @@ class RubiksCube {
     yAxis: vec3;
     zAxis: vec3;
 
-    permutor: Permutor;
+    rubiksCubeLogic: RubiksCubeLogic;
 
     timeout: number;
 
     animation: (() => void) | null;
-
     actionQueue: (() => void)[];
 
     constructor(size: number, gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader) {
@@ -70,37 +44,12 @@ class RubiksCube {
 
         this.timeout = -1;
 
-        this.permutor = new Permutor({
-            'f': 'f',
-            'b': 'b',
-            'r': 'r',
-            'l': 'l',
-            'u': 'u',
-            'd': 'd',
-        });
+        this.rubiksCubeLogic = new RubiksCubeLogic(this.cubes);
 
         this.animation = null;
         this.actionQueue = [];
 
         let scale = [1.0, 1.0, 1.0];
-
-        /**
-         * back:   0-8
-         * front: 18-26
-         * up:    6-8, 15-17, 24-26
-         * down:  0-2, 9-11, 18-20
-         * right: 2,5,8, 11,14,17, 20,23,26
-         * left:  0,3,6, 9,12,15,  18,21,24
-         */
-
-        let face_color_map = {
-            back:  [0 ,1 ,2 ,3 ,4 ,5 ,6 ,7 ,8 ],
-            front: [18,19,20,21,22,23,24,25,26],
-            up:    [6 ,7 ,8 ,15,16,17,24,25,26],
-            down:  [0 ,1 ,2 ,9 ,10,11,18,19,20],
-            right: [2 ,5 ,8 ,11,14,17,20,23,26],
-            left:  [0 ,3 ,6 ,9 ,12,15,18,21,24],
-        }
 
         let CubeColors = {
             front: ColorName.GREEN,
@@ -110,6 +59,13 @@ class RubiksCube {
             left:  ColorName.RED,
             back:  ColorName.BLUE,
         };
+
+        let backIndices  = this.rubiksCubeLogic.getFaceIndices(Face.BACK) as number[];
+        let frontIndices = this.rubiksCubeLogic.getFaceIndices(Face.FRONT) as number[];
+        let upIndices    = this.rubiksCubeLogic.getFaceIndices(Face.UP) as number[];
+        let downIndices  = this.rubiksCubeLogic.getFaceIndices(Face.DOWN) as number[];
+        let rightIndices = this.rubiksCubeLogic.getFaceIndices(Face.RIGHT) as number[];
+        let leftIndices  = this.rubiksCubeLogic.getFaceIndices(Face.LEFT) as number[];
 
         for (let i = 0; i < Math.pow(size, 3); i++) {
             let x = 1.1 * (i % 3) - 1.1;
@@ -124,17 +80,17 @@ class RubiksCube {
                 back:  ColorName.BLACK,
             };
 
-            if (face_color_map.back.includes(i))
+            if (backIndices.includes(i))
                 color.back = CubeColors.back;
-            if (face_color_map.front.includes(i))
+            if (frontIndices.includes(i))
                 color.front = CubeColors.front;
-            if (face_color_map.up.includes(i))
+            if (upIndices.includes(i))
                 color.up = CubeColors.up;
-            if (face_color_map.down.includes(i))
+            if (downIndices.includes(i))
                 color.down = CubeColors.down;
-            if (face_color_map.right.includes(i))
+            if (rightIndices.includes(i))
                 color.right = CubeColors.right;
-            if (face_color_map.left.includes(i))
+            if (leftIndices.includes(i))
                 color.left = CubeColors.left;
             
             this.cubes.push(new Cube(gl, shader, shader_outline, [x, y, z] ,scale, color, i));
@@ -150,7 +106,7 @@ class RubiksCube {
         if (this.animation !== null) {
             this.animation();
         }
-        
+
         let view = mat4.create();
         mat4.lookAt(view, this.cameraPos, [0,0,0], this.cameraUp);
 
@@ -165,9 +121,7 @@ class RubiksCube {
         });
     }
 
-    gen_animation(indices: Array<number>, frame_count: number, rotation: mat4, 
-                end_mapping: Array<number>, callback : ((rc: RubiksCube) => void) | null = null, inverse = false) {
-
+    gen_animation(indices: Array<number>, frame_count: number, rotation: mat4, callback : ((rc: RubiksCube) => void) | null = null) {
         let frame = 1;
         let animation = () => {
             indices.forEach(i => {
@@ -176,26 +130,7 @@ class RubiksCube {
 
             frame += 1;
             if (frame > frame_count) {
-                // wrap up animation by updating indices
                 this.animation = null;
-                let temp_vals : {[key: number]: Cube} = {};
-
-                if (inverse) {
-                    let temp = indices;
-                    indices = end_mapping;
-                    end_mapping = temp;
-                }
-
-                end_mapping.forEach((newI, i) => {
-                    temp_vals[newI] = this.cubes[newI];
-                    if (temp_vals[indices[i]] !== undefined) {
-                        // value was replaced, stored in temp_vals[indices[i]]
-                        this.cubes[newI] = temp_vals[indices[i]];
-                    } else {
-                        this.cubes[newI] = this.cubes[indices[i]];
-                    }
-                });
-
                 if (callback)
                     callback(this);
             }
@@ -204,8 +139,6 @@ class RubiksCube {
         return animation.bind(this);
     }
 
-    // TODO refactor mapping to two isomorphic permutation
-    // (since it is the same on all faces, expect ccw perms)
     turnRight(inverse: boolean = false) {
         let right         = [2 ,5 ,8,11,14,17,20,23,26];
         let right_mapping = [20,11,2,23,14,5 ,26,17,8 ];
@@ -218,7 +151,9 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.xAxis)
 
-        this.actionQueue.push(this.gen_animation(right, 10, rotation, right_mapping, null, inverse))
+        this.actionQueue.push(this.gen_animation(right, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turn(Face.RIGHT, inverse); 
+        }))
     }
 
     turnUp(inverse: boolean = false) {
@@ -233,7 +168,9 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.yAxis)
         
-        this.actionQueue.push(this.gen_animation(up, 10, rotation, up_mapping, null, inverse));
+        this.actionQueue.push(this.gen_animation(up, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turn(Face.UP, inverse); 
+        }));
     }
 
     turnLeft(inverse: boolean = false) {
@@ -248,7 +185,9 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.xAxis)
         
-        this.actionQueue.push(this.gen_animation(left, 10, rotation, left_mapping, null, inverse));
+        this.actionQueue.push(this.gen_animation(left, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turn(Face.LEFT, inverse); 
+        }));
     }
 
     turnDown(inverse: boolean = false) {
@@ -263,7 +202,9 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.yAxis)
         
-        this.actionQueue.push(this.gen_animation(down, 10, rotation, down_mapping, null, inverse));
+        this.actionQueue.push(this.gen_animation(down, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turn(Face.DOWN, inverse); 
+        }));
     }
 
     turnFront(inverse: boolean = false) {
@@ -278,7 +219,9 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.zAxis)
         
-        this.actionQueue.push(this.gen_animation(front, 10, rotation, front_mapping, null, inverse));
+        this.actionQueue.push(this.gen_animation(front, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turn(Face.FRONT, inverse); 
+        }));
     }
 
     turnBack(inverse: boolean = false) {
@@ -293,7 +236,9 @@ class RubiksCube {
         else 
             mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.zAxis)
         
-        this.actionQueue.push(this.gen_animation(back, 10, rotation, back_mapping, null, inverse));
+        this.actionQueue.push(this.gen_animation(back, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turn(Face.BACK, inverse); 
+        }));
     }
 
     turnX(inverse: boolean = false) {
@@ -307,7 +252,16 @@ class RubiksCube {
         let all = [...Array(27).keys()];
         let all_mapping = [18,19,20,9,10,11,0,1,2,21,22,23,12,13,14,3,4,5,24,25,26,15,16,17,6,7,8];
 
-        this.actionQueue.push(this.gen_animation(all, 10, rotation, all_mapping, rubiks_cube => {}, inverse));
+        let obj: object;
+        if (inverse)
+            obj = Object.fromEntries(all_mapping.map((newI, i) => [newI, i]));
+        else
+            obj = Object.fromEntries(all_mapping.map((newI, i) => [i, newI]));
+
+        this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiks_cube => {
+            let perm = new Permutor(rubiks_cube.cubes);
+            perm.permute_obj(obj);
+        }));
     }
 
     turnY(inverse: boolean = false) {
@@ -320,16 +274,25 @@ class RubiksCube {
 
         let all = [...Array(27).keys()];
         let all_mapping = [2,11,20,5,14,23,8,17,26,1,10,19,4,13,22,7,16,25,0,9,18,3,12,21,6,15,24];
-        this.actionQueue.push(this.gen_animation(all, 10, rotation, all_mapping, rubiks_cube => {}, inverse));
+        let obj: object;
+        if (inverse)
+            obj = Object.fromEntries(all_mapping.map((newI, i) => [newI, i]));
+        else
+            obj = Object.fromEntries(all_mapping.map((newI, i) => [i, newI]));
+
+        this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiks_cube => {
+            let perm = new Permutor(rubiks_cube.cubes);
+            perm.permute_obj(obj);
+        }));
     }
 
     do_y(inverse: boolean) {
-        if (inverse)
-            this.permutor.ccw_perm(['f', 'l', 'b', 'r']);
-        else
-            this.permutor.cw_perm(['f', 'l', 'b', 'r']);
+        // if (inverse)
+        //     this.permutor.ccw_perm(['f', 'l', 'b', 'r']);
+        // else
+        //     this.permutor.cw_perm(['f', 'l', 'b', 'r']);
     
-        let f_face_string = face_map[this.permutor.obj['f'] as 'f'];
+        // let f_face_string = face_map[this.permutor.obj['f'] as 'f'];
     
         if (this.timeout != -1) {
             clearTimeout(this.timeout);
@@ -344,12 +307,12 @@ class RubiksCube {
     }
     
     do_x(inverse: boolean) {
-        if (inverse)
-            this.permutor.ccw_perm(['f', 'u', 'b', 'd']);
-        else
-            this.permutor.cw_perm(['f', 'u', 'b', 'd']);
+        // if (inverse)
+        //     this.permutor.ccw_perm(['f', 'u', 'b', 'd']);
+        // else
+        //     this.permutor.cw_perm(['f', 'u', 'b', 'd']);
     
-        let f_face_string = face_map[this.permutor.obj['f'] as 'f'];
+        // let f_face_string = face_map[this.permutor.obj['f'] as 'f'];
     
         if (this.timeout != -1) {
             clearTimeout(this.timeout);
@@ -404,4 +367,4 @@ class RubiksCube {
     }
 }
 
-export { RubiksCube, Face };
+export { RubiksCube };
