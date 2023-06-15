@@ -1,4 +1,4 @@
-import { ColorName, Cube } from "./cube";
+import { Cube } from "./cube";
 import { Face, FacePermutor } from "./facePermutor";
 import { Permutor } from "./permutor";
 
@@ -10,6 +10,9 @@ class RubiksCubeLogic {
         [Face.DOWN] : [Face.RIGHT, Face.BACK, Face.LEFT, Face.FRONT],
         [Face.FRONT]: [Face.UP, Face.RIGHT, Face.DOWN, Face.LEFT],
         [Face.BACK] : [Face.LEFT, Face.DOWN, Face.RIGHT, Face.UP],
+        [Face.M]    : [Face.DOWN, Face.BACK, Face.UP, Face.FRONT],
+        [Face.E]    : [Face.RIGHT, Face.BACK, Face.LEFT, Face.FRONT],
+        [Face.S]    : [Face.UP, Face.RIGHT, Face.DOWN, Face.LEFT],
     };
     static oppositeFaceMap = {
         [Face.RIGHT]: Face.LEFT,
@@ -18,6 +21,9 @@ class RubiksCubeLogic {
         [Face.DOWN] : Face.UP,
         [Face.FRONT]: Face.BACK,
         [Face.BACK] : Face.FRONT,
+        [Face.M]    : Face.RIGHT,
+        [Face.E]    : Face.UP,
+        [Face.S]    : Face.BACK,
     };
 
     cubes: Cube[];
@@ -80,7 +86,7 @@ class RubiksCubeLogic {
         return this.cubes
                 .filter((cube, i) => indices.includes(i))
                 .map(cube => {
-                    return cube.color[cube.permutor.obj[face] as Face]
+                    return cube.color[cube.permutor.obj[face] as Face.BACK]
                 })
     }
 

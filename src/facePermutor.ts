@@ -6,7 +6,10 @@ enum Face {
     UP,
     DOWN,
     BACK,
-    FRONT
+    FRONT,
+    S,
+    M,
+    E,
 };
 
 class FacePermutor {
@@ -17,7 +20,9 @@ class FacePermutor {
         [Face.DOWN , [0 ,1 ,2 ,9 ,10,11,18,19,20]],
         [Face.RIGHT, [2 ,5 ,8 ,11,14,17,20,23,26]],
         [Face.LEFT , [0 ,3 ,6 ,9 ,12,15,18,21,24]],
-        // [Face.M    , [1 ,4 ,7 ,10,13,16,19,22,25]],
+        [Face.S    , [1 ,4 ,7 ,10,13,16,19,22,25]],
+        [Face.M    , [9 ,10,11,12,13,14,15,16,17]],
+        [Face.E    , [3 ,4 ,5 ,12,13,14,21,22,23]],
     ]);
 
     static perms       : Map<Face, Map<number, number>>;

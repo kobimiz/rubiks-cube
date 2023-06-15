@@ -8,6 +8,8 @@ import { Cube } from "./cube";
 import { glMatrix, mat4, vec3, quat} from "gl-matrix";
 import { Shuffler } from "./shuffler";
 import { FacePermutor } from "./facePermutor";
+import * as cubeSolver from 'cube-solver';
+
 
 let canvas = document.getElementsByTagName('canvas')[0];
 let gl = canvas.getContext('webgl2', { stencil: true }); // stencil option is important
@@ -69,13 +71,13 @@ document.addEventListener('keydown', e => {
     else if (side_to_rotate == 'b')
         rubiks_cube.turnBack(e.shiftKey);
     else if (e.key == 'ArrowRight')
-        rubiks_cube.turnY(false);
-    else if (e.key == 'ArrowLeft')
         rubiks_cube.turnY(true);
+    else if (e.key == 'ArrowLeft')
+        rubiks_cube.turnY(false);
     else if (e.key == 'ArrowUp')
-        rubiks_cube.turnX(true);
-    else if (e.key == 'ArrowDown')
         rubiks_cube.turnX(false);
+    else if (e.key == 'ArrowDown')
+        rubiks_cube.turnX(true);
 });
 console.log(rubiks_cube)
 
@@ -95,8 +97,41 @@ document.getElementById('shuffle')?.addEventListener('click', e => {
             drawInterval = setInterval(draw, time_delta, gl) as unknown as NodeJS.Timer;
         }
     }, time_delta) as unknown as NodeJS.Timer;
-    console.log(shuffler.shuffle(10));
+    console.log(shuffler.shuffle(22));
     
+});
+
+document.getElementById('solve')?.addEventListener('click', e => {
+    console.log(rubiks_cube.scrambleString.trim())
+    console.log(cubeSolver.scramble('3x3'))
+    let solve = cubeSolver.solve(rubiks_cube.scrambleString.trim(), 'kociemba').split(' ');
+    solve.forEach(turn => {
+        let face = turn.at(0);
+        let inverse = false;
+        let count = 1;
+        
+        if (turn.length == 2) {
+            if (turn.at(1) == "'")
+            inverse = true;
+            else
+            count = 2;
+        }
+        
+        for (let i = 0; i < count; i++) {
+            if (face == 'F')
+                rubiks_cube.turnFront(inverse)
+            else if (face == 'B')
+                rubiks_cube.turnBack(inverse)
+            else if (face == 'R')
+                rubiks_cube.turnRight(inverse)
+            else if (face == 'L')
+                rubiks_cube.turnLeft(inverse)
+            else if (face == 'U')
+                rubiks_cube.turnUp(inverse)
+            else if (face == 'D')
+                rubiks_cube.turnDown(inverse)
+        }
+    });
 });
 
 // document.addEventListener('keydown', e => {

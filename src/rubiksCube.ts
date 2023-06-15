@@ -26,6 +26,7 @@ class RubiksCube {
     actionQueue: (() => void)[];
 
     isSolved: boolean;
+    scrambleString: string;
 
     constructor(size: number, gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader) {
         this.cubes = [];
@@ -47,6 +48,7 @@ class RubiksCube {
         this.actionQueue = [];
 
         this.isSolved = false; // technically it is...
+        this.scrambleString = '';
 
         let scale = [1.0, 1.0, 1.0];
 
@@ -152,6 +154,7 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.RIGHT, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }))
+        this.scrambleString += ' R' + (inverse ? "'":"");
     }
 
     turnUp(inverse: boolean = false) {
@@ -169,6 +172,8 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.UP, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
+
+        this.scrambleString += ' U' + (inverse ? "'":"");
     }
 
     turnLeft(inverse: boolean = false) {
@@ -185,6 +190,8 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.LEFT, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
+
+        this.scrambleString += ' L' + (inverse ? "'":"");
     }
 
     turnDown(inverse: boolean = false) {
@@ -201,6 +208,7 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.DOWN, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
+        this.scrambleString += ' D' + (inverse ? "'":"");
     }
 
     turnFront(inverse: boolean = false) {
@@ -217,6 +225,7 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.FRONT, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
+        this.scrambleString += ' F' + (inverse ? "'":"");
     }
 
     turnBack(inverse: boolean = false) {
@@ -233,6 +242,7 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.BACK, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
+        this.scrambleString += ' B' + (inverse ? "'":"");
     }
 
     turnX(inverse: boolean = false) {
@@ -246,6 +256,7 @@ class RubiksCube {
         this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turnX(inverse); 
         }));
+        this.scrambleString += ' x' + (inverse ? "'":"");
     }
 
     turnY(inverse: boolean = false) {
@@ -259,6 +270,7 @@ class RubiksCube {
         this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turnY(inverse); 
         }));
+        this.scrambleString += ' y' + (inverse ? "'":"");
     }
 
     highlightFace(face: Face, on: boolean) {
