@@ -1,7 +1,7 @@
 import { RubiksCube } from "./rubiksCube";
 
 type TurnMap = {
-    [key: string]: (inverse?: boolean) => void
+    [key: string]: (inverse?: boolean, isUserMove?: boolean) => void
 }
 
 class Shuffler {
@@ -42,7 +42,7 @@ class Shuffler {
             move: this.getRandomTurn(),
             inverse: !!Math.floor(Math.random() * 2)
         };
-        this.turnMap[lastTurn.move](lastTurn.inverse);
+        this.turnMap[lastTurn.move](lastTurn.inverse, false);
         shuffleMoves.push(lastTurn);
 
         // number of repetitions of the same turn. can be max 2
@@ -70,7 +70,7 @@ class Shuffler {
                 consecutive = 1;
 
             lastTurn = turn;
-            this.turnMap[lastTurn.move](lastTurn.inverse);
+            this.turnMap[lastTurn.move](lastTurn.inverse, false);
             shuffleMoves.push(lastTurn);
         }
 

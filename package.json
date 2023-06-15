@@ -17,6 +17,7 @@
     "webpack-cli": "^5.1.1"
   },
   "dependencies": {
+    "cube-solver": "^2.4.1",
     "gl-matrix": "^3.4.3"
   }
 }

@@ -5,13 +5,22 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <canvas class="canvas" style="border: 1px solid black" height="1000" width="1000"></canvas>
-
-    <br>
-    <input type="button" id="shuffle" value="Shuffle">
-    <span id="message"></span>
+    <div id="container">
+        <canvas class="canvas" style="border: 1px solid black" height="1000" width="1000"></canvas>
+        <div id="info">
+            <input type="button" id="shuffle" value="Shuffle">
+            <input type="button" id="solve" value="Solve">
+            <br>
+            Moves: <span id="moves"></span>
+            <br> 
+            Move count: <span id="moveCount">0</span>
+            <br>
+            <span id="message"></span>
+        </div>
+    </div>
     <script src="../dist/bundle.js" defer></script>
 </body>
 </html>

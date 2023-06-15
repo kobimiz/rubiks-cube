@@ -5,6 +5,13 @@ import Shader from "./shader";
 import { Face } from "./facePermutor";
 import { RubiksCubeLogic } from "./rubiksCubeLogic";
 
+type Turn = {
+    move: string,
+    inverse: boolean,
+    count: number,
+    isUserMove: boolean
+}
+
 class RubiksCube {
     cubes: Cube[];
 
@@ -26,7 +33,7 @@ class RubiksCube {
     actionQueue: (() => void)[];
 
     isSolved: boolean;
-    scrambleString: string;
+    turns: Turn[];
 
     constructor(size: number, gl: WebGL2RenderingContext, shader: Shader, shader_outline: Shader) {
         this.cubes = [];
@@ -48,7 +55,7 @@ class RubiksCube {
         this.actionQueue = [];
 
         this.isSolved = false; // technically it is...
-        this.scrambleString = '';
+        this.turns = [];
 
         let scale = [1.0, 1.0, 1.0];
 
@@ -140,7 +147,37 @@ class RubiksCube {
         return animation.bind(this);
     }
 
-    turnRight(inverse: boolean = false) {
+    private updateScrambleString(move: string, inverse: boolean, isUserMove = true) {
+        if (this.turns.length > 0) {
+            let lastTurn = this.turns.at(-1) as Turn;
+            if (lastTurn.move == move) {
+                if (lastTurn.inverse != inverse)
+                    this.turns.pop();
+                else if (lastTurn.count == 1)
+                    lastTurn.count = 2;
+                else {
+                    lastTurn.count = 1;
+                    lastTurn.inverse = !lastTurn.inverse
+;                }
+            } else
+                this.turns.push({ move, inverse, count: 1, isUserMove });
+        } else
+            this.turns.push({ move, inverse, count: 1, isUserMove });
+
+        (document.getElementById('moves') as HTMLElement).innerHTML = this.getScrambleString(true);
+        (document.getElementById('moveCount') as HTMLElement).textContent = this.turns.filter(turn => ['x', 'y'].includes(turn.move) === false).length.toString()
+    }
+
+    getScrambleString(includeStyling = false) {
+        return this.turns
+                .map(turn => {
+                    if (!includeStyling || turn.isUserMove)
+                        return `${turn.move}${turn.count > 1 ? turn.count:''}${turn.count == 1 && turn.inverse ? "'":""}`
+                    return `<span class='generatedMove'>${turn.move}${turn.count > 1 ? turn.count:''}${turn.count == 1 && turn.inverse ? "'":""}</span>`
+                }).join(' ');        
+    }
+
+    turnRight(inverse: boolean = false, isUserMove = true) {
         let right = this.rubiksCubeLogic.getFaceIndices(Face.RIGHT) as number[];
         let frame_count = 10;
 
@@ -154,10 +191,10 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.RIGHT, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }))
-        this.scrambleString += ' R' + (inverse ? "'":"");
+        this.updateScrambleString('R', inverse, isUserMove);
     }
 
-    turnUp(inverse: boolean = false) {
+    turnUp(inverse: boolean = false, isUserMove = true) {
         let up = this.rubiksCubeLogic.getFaceIndices(Face.UP) as number[];
         let frame_count = 10;
 
@@ -173,10 +210,10 @@ class RubiksCube {
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
 
-        this.scrambleString += ' U' + (inverse ? "'":"");
+        this.updateScrambleString('U', inverse, isUserMove);
     }
 
-    turnLeft(inverse: boolean = false) {
+    turnLeft(inverse: boolean = false, isUserMove = true) {
         let left = this.rubiksCubeLogic.getFaceIndices(Face.LEFT) as number[];
         let frame_count = 10;
 
@@ -191,10 +228,10 @@ class RubiksCube {
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
 
-        this.scrambleString += ' L' + (inverse ? "'":"");
+        this.updateScrambleString('L', inverse, isUserMove);
     }
 
-    turnDown(inverse: boolean = false) {
+    turnDown(inverse: boolean = false, isUserMove = true) {
         let down = this.rubiksCubeLogic.getFaceIndices(Face.DOWN) as number[];
         let frame_count = 10;
 
@@ -208,10 +245,10 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.DOWN, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
-        this.scrambleString += ' D' + (inverse ? "'":"");
+        this.updateScrambleString('D', inverse, isUserMove);
     }
 
-    turnFront(inverse: boolean = false) {
+    turnFront(inverse: boolean = false, isUserMove = true) {
         let front = this.rubiksCubeLogic.getFaceIndices(Face.FRONT) as number[];
         let frame_count = 10;
 
@@ -225,10 +262,10 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.FRONT, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
-        this.scrambleString += ' F' + (inverse ? "'":"");
+        this.updateScrambleString('F', inverse, isUserMove);
     }
 
-    turnBack(inverse: boolean = false) {
+    turnBack(inverse: boolean = false, isUserMove = true) {
         let back = this.rubiksCubeLogic.getFaceIndices(Face.BACK) as number[];
         let frame_count = 10;
 
@@ -242,7 +279,7 @@ class RubiksCube {
             rubiksCube.rubiksCubeLogic.turn(Face.BACK, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
-        this.scrambleString += ' B' + (inverse ? "'":"");
+        this.updateScrambleString('B', inverse, isUserMove);
     }
 
     turnX(inverse: boolean = false) {
@@ -256,7 +293,7 @@ class RubiksCube {
         this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turnX(inverse); 
         }));
-        this.scrambleString += ' x' + (inverse ? "'":"");
+        this.updateScrambleString('x', inverse);
     }
 
     turnY(inverse: boolean = false) {
@@ -270,7 +307,7 @@ class RubiksCube {
         this.actionQueue.push(this.gen_animation(all, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turnY(inverse); 
         }));
-        this.scrambleString += ' y' + (inverse ? "'":"");
+        this.updateScrambleString('y', inverse);
     }
 
     highlightFace(face: Face, on: boolean) {

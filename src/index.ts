@@ -102,9 +102,7 @@ document.getElementById('shuffle')?.addEventListener('click', e => {
 });
 
 document.getElementById('solve')?.addEventListener('click', e => {
-    console.log(rubiks_cube.scrambleString.trim())
-    console.log(cubeSolver.scramble('3x3'))
-    let solve = cubeSolver.solve(rubiks_cube.scrambleString.trim(), 'kociemba').split(' ');
+    let solve = cubeSolver.solve(rubiks_cube.getScrambleString(), 'kociemba').split(' ');
     solve.forEach(turn => {
         let face = turn.at(0);
         let inverse = false;
