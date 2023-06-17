@@ -12,6 +12,32 @@ enum Face {
     E,
 };
 
+export const Edges = {
+    DB: 1,
+    BL: 3,
+    BR: 5,
+    UB: 7,
+    DL: 9,
+    DR: 11,
+    UL: 15,
+    UR: 17,
+    DF: 19,
+    FL: 21,
+    FR: 23,
+    UF: 25,
+};
+  
+export const Corners = {
+    DBL: 0,
+    DBR: 2,
+    ULB: 6,
+    UBR: 8,
+    DLF: 18,
+    DFR: 20,
+    UFL: 24,
+    URF: 26,
+};
+
 class FacePermutor {
     static faceMap : Map<Face, number[]> = new Map([
         [Face.BACK , [0 ,1 ,2 ,3 ,4 ,5 ,6 ,7 ,8 ]],
@@ -78,7 +104,7 @@ class FacePermutor {
         this.permutor.permute_obj_from_map(perm);
     }
 
-    getFaceIndices(face: Face) {
+    static getFaceIndices(face: Face) {
         return FacePermutor.faceMap.get(face);
     }
 };

@@ -1,4 +1,5 @@
 import { Cube } from "./cube";
+import { CubeLogic } from "./cubeLogic";
 import { Face, FacePermutor } from "./facePermutor";
 import { Permutor } from "./permutor";
 
@@ -26,11 +27,11 @@ class RubiksCubeLogic {
         [Face.S]    : Face.BACK,
     };
 
-    cubes: Cube[];
+    cubes: CubeLogic[] | Cube[];
     facePermutor: FacePermutor;
     permutor: Permutor;
 
-    constructor(cubes: Cube[]) {
+    constructor(cubes: CubeLogic[] | Cube[]) {
         this.cubes = cubes;
         this.facePermutor = new FacePermutor(this.cubes);
         this.permutor = new Permutor(this.cubes);
@@ -40,7 +41,7 @@ class RubiksCubeLogic {
         this.facePermutor.turn(face, inverse);
         let perm = RubiksCubeLogic.permutorMap[inverse ? RubiksCubeLogic.oppositeFaceMap[face] : face];
 
-        this.getFaceIndices(face)?.forEach(i => {
+        FacePermutor.getFaceIndices(face)?.forEach(i => {
             this.cubes[i].permutor.cw_perm(perm);
         });
     }
@@ -78,10 +79,6 @@ class RubiksCubeLogic {
         this.permutor.permute_obj(obj);
     }
 
-    getFaceIndices(face: Face) {
-        return this.facePermutor.getFaceIndices(face);
-    }
-
     getColors(indices: number[], face: Face) {
         return this.cubes
                 .filter((cube, i) => indices.includes(i))
@@ -95,7 +92,7 @@ class RubiksCubeLogic {
         let isSolved = true;
 
         faces.forEach(face => {
-            let indices = this.getFaceIndices(face) as number[];
+            let indices = FacePermutor.getFaceIndices(face) as number[];
             let faceColors = this.getColors(indices, face);
             let faceColor = faceColors[0];
 
@@ -104,6 +101,14 @@ class RubiksCubeLogic {
         });
 
         return isSolved;
+    }
+
+    getEdges() {
+        return [1,3,5,7, 9,11,15,17, 19,21,23,25].map(i => this.cubes[i]);
+    }
+
+    copy() {
+        
     }
 };
 

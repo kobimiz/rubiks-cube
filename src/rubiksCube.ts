@@ -2,8 +2,9 @@ import { mat4, quat, vec3 } from "gl-matrix";
 import { Cube, ColorName } from "./cube";
 
 import Shader from "./shader";
-import { Face } from "./facePermutor";
+import { Face, FacePermutor } from "./facePermutor";
 import { RubiksCubeLogic } from "./rubiksCubeLogic";
+import { ColorNames } from "./cfopGuide";
 
 type Turn = {
     move: string,
@@ -68,12 +69,12 @@ class RubiksCube {
             back:  ColorName.BLUE,
         };
 
-        let backIndices  = this.rubiksCubeLogic.getFaceIndices(Face.BACK) as number[];
-        let frontIndices = this.rubiksCubeLogic.getFaceIndices(Face.FRONT) as number[];
-        let upIndices    = this.rubiksCubeLogic.getFaceIndices(Face.UP) as number[];
-        let downIndices  = this.rubiksCubeLogic.getFaceIndices(Face.DOWN) as number[];
-        let rightIndices = this.rubiksCubeLogic.getFaceIndices(Face.RIGHT) as number[];
-        let leftIndices  = this.rubiksCubeLogic.getFaceIndices(Face.LEFT) as number[];
+        let backIndices  = FacePermutor.getFaceIndices(Face.BACK) as number[];
+        let frontIndices = FacePermutor.getFaceIndices(Face.FRONT) as number[];
+        let upIndices    = FacePermutor.getFaceIndices(Face.UP) as number[];
+        let downIndices  = FacePermutor.getFaceIndices(Face.DOWN) as number[];
+        let rightIndices = FacePermutor.getFaceIndices(Face.RIGHT) as number[];
+        let leftIndices  = FacePermutor.getFaceIndices(Face.LEFT) as number[];
 
         for (let i = 0; i < Math.pow(size, 3); i++) {
             let x = 1.1 * (i % 3) - 1.1;
@@ -178,7 +179,7 @@ class RubiksCube {
     }
 
     turnRight(inverse: boolean = false, isUserMove = true) {
-        let right = this.rubiksCubeLogic.getFaceIndices(Face.RIGHT) as number[];
+        let right = FacePermutor.getFaceIndices(Face.RIGHT) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -195,7 +196,7 @@ class RubiksCube {
     }
 
     turnUp(inverse: boolean = false, isUserMove = true) {
-        let up = this.rubiksCubeLogic.getFaceIndices(Face.UP) as number[];
+        let up = FacePermutor.getFaceIndices(Face.UP) as number[];
         let frame_count = 10;
 
 
@@ -214,7 +215,7 @@ class RubiksCube {
     }
 
     turnLeft(inverse: boolean = false, isUserMove = true) {
-        let left = this.rubiksCubeLogic.getFaceIndices(Face.LEFT) as number[];
+        let left = FacePermutor.getFaceIndices(Face.LEFT) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -232,7 +233,7 @@ class RubiksCube {
     }
 
     turnDown(inverse: boolean = false, isUserMove = true) {
-        let down = this.rubiksCubeLogic.getFaceIndices(Face.DOWN) as number[];
+        let down = FacePermutor.getFaceIndices(Face.DOWN) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -249,7 +250,7 @@ class RubiksCube {
     }
 
     turnFront(inverse: boolean = false, isUserMove = true) {
-        let front = this.rubiksCubeLogic.getFaceIndices(Face.FRONT) as number[];
+        let front = FacePermutor.getFaceIndices(Face.FRONT) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -266,7 +267,7 @@ class RubiksCube {
     }
 
     turnBack(inverse: boolean = false, isUserMove = true) {
-        let back = this.rubiksCubeLogic.getFaceIndices(Face.BACK) as number[];
+        let back = FacePermutor.getFaceIndices(Face.BACK) as number[];
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -311,7 +312,7 @@ class RubiksCube {
     }
 
     highlightFace(face: Face, on: boolean) {
-        this.rubiksCubeLogic.getFaceIndices(face)?.forEach(i => this.cubes[i].outline(on))
+        FacePermutor.getFaceIndices(face)?.forEach(i => this.cubes[i].outline(on))
     }
 
     select_by_order(on: boolean) {
@@ -320,6 +321,26 @@ class RubiksCube {
                 cube.select(on);
             }, 100 * i);
         })
+    }
+
+    getFaceColors(face: Face) {
+        let faceCubes = FacePermutor.getFaceIndices(face)
+                        ?.map(i => this.cubes[i])
+        
+        let faceColors = faceCubes?.map(cube => cube.color[cube.permutor.obj[face] as Face.BACK]) as ColorName[];
+
+        return faceColors;
+    }
+
+    toString() {
+        let front = this.getFaceColors(Face.FRONT).join('');
+        let back  = this.getFaceColors(Face.BACK).join('');
+        let up    = this.getFaceColors(Face.UP).join('');
+        let down  = this.getFaceColors(Face.DOWN).join('');
+        let left  = this.getFaceColors(Face.LEFT).join('');
+        let right = this.getFaceColors(Face.RIGHT).join('');
+
+        return `${front}${back}${up}${down}${left}${right}`;
     }
 }
 

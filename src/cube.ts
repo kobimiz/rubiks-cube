@@ -1,6 +1,7 @@
 import { mat4, vec3 } from "gl-matrix";
 import Shader from "./shader";
 import { Face } from "./facePermutor";
+import { CubeLogic } from "./cubeLogic";
 import { Permutor } from "./permutor";
 
 const Color = [
