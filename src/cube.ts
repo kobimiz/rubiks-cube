@@ -171,6 +171,10 @@ class Cube {
     outline(on: boolean) {
         this.outlined = on;
     }
+    
+    getColor(face: Face) {
+        return this.color[this.permutor.obj[face] as Face.FRONT]
+    }
 
     static init(gl: WebGL2RenderingContext) {
         Cube.vboVertices = gl.createBuffer();

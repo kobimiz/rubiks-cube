@@ -18,6 +18,10 @@ class CubeLogic {
             [Face.DOWN] : Face.DOWN,
         });
     }
+
+    getColor(face: Face) {
+        return this.color[this.permutor.obj[face] as Face.FRONT]
+    }
 }
 
 export { CubeLogic, CubeColors };
