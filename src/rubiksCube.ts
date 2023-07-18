@@ -196,7 +196,7 @@ class RubiksCube {
                 rubiksCube.rubiksCubeLogic.turn(Face.M, !inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }))
-        this.updateScrambleString('R', inverse, isUserMove);
+        this.updateScrambleString((isDouble ? 'r':'R'), inverse, isUserMove);
     }
 
     turnUp(inverse: boolean = false, isDouble = false, isUserMove = true) {
@@ -219,7 +219,7 @@ class RubiksCube {
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
 
-        this.updateScrambleString('U', inverse, isUserMove);
+        this.updateScrambleString((isDouble ? 'u':'U'), inverse, isUserMove);
     }
 
     turnLeft(inverse: boolean = false, isDouble = false, isUserMove = true) {
@@ -243,7 +243,7 @@ class RubiksCube {
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
 
-        this.updateScrambleString('L', inverse, isUserMove);
+        this.updateScrambleString((isDouble ? 'l':'L'), inverse, isUserMove);
     }
 
     turnDown(inverse: boolean = false, isDouble = false, isUserMove = true) {
@@ -264,7 +264,7 @@ class RubiksCube {
                 rubiksCube.rubiksCubeLogic.turn(Face.E, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
-        this.updateScrambleString('D', inverse, isUserMove);
+        this.updateScrambleString((isDouble ? 'd':'D'), inverse, isUserMove);
     }
 
     turnFront(inverse: boolean = false, isDouble = false, isUserMove = true) {
@@ -285,7 +285,7 @@ class RubiksCube {
                 rubiksCube.rubiksCubeLogic.turn(Face.S, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
-        this.updateScrambleString('F', inverse, isUserMove);
+        this.updateScrambleString((isDouble ? 'f':'F'), inverse, isUserMove);
     }
 
     turnBack(inverse: boolean = false, isDouble = false, isUserMove = true) {
@@ -306,7 +306,7 @@ class RubiksCube {
                 rubiksCube.rubiksCubeLogic.turn(Face.S, !inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
-        this.updateScrambleString('B', inverse, isUserMove);
+        this.updateScrambleString((isDouble ? 'b':'B'), inverse, isUserMove);
     }
 
     turnM(inverse: boolean = false, isUserMove = true) {
