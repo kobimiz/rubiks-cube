@@ -226,54 +226,22 @@ document.getElementById('custom')?.addEventListener('click', e => {
 let lastMoves : string[] = []
 let guide = new CFOPGuide(rubiks_cube.rubiksCubeLogic);
 document.getElementById('idSearch')?.addEventListener('click', e => {
-    let res = guide.solveNextF2LPair();
+    let i = 0;
+    function cb() {
+        console.log(`cb called! ${i}`)
+        let res = guide.solveNextF2LPair();
+        lastMoves = res.solution.concat(res.rotation_sol).concat(res.insertion_sol);
+        CFOPGuide.applyTurnsCube(rubiks_cube, lastMoves)
 
-    lastMoves = res.solution.concat(res.rotation_sol).concat(res.insertion_sol);
-    // lastMoves = res.solution.concat(res.insertion ? res.insertion : []);
-    
-    console.log(lastMoves)
-    console.log(res);
-    if (!res.insertion_sol)
-        console.log('(insertion null)')
-    if (!res.rotation_sol)
-        console.log('(rotation null)')
+        i++;
+        if (i < 4)
+            rubiks_cube.setFinishAnimationAction(cb, true);
+    }
 
-    lastMoves.forEach(turn => {
-        if (turn[0] == 'y')
-            rubiks_cube.turnY(turn.length > 1);
-        else if (turn[0] == 'x')
-            rubiks_cube.turnX(turn.length > 1);
-        else if (turn[0] == 'R')
-            rubiks_cube.turnRight(turn.length > 1);
-        else if (turn[0] == 'L')
-            rubiks_cube.turnLeft(turn.length > 1);
-        else if (turn[0] == 'U')
-            rubiks_cube.turnUp(turn.length > 1);
-        else if (turn[0] == 'D')
-            rubiks_cube.turnDown(turn.length > 1);
-        else if (turn[0] == 'F')
-            rubiks_cube.turnFront(turn.length > 1);
-        else if (turn[0] == 'B')
-            rubiks_cube.turnBack(turn.length > 1);
-    })
-
-    let f2l = new F2LCases(rubiks_cube.rubiksCubeLogic);
-
-    let pair = res.pair;
-    let colors;
-
-    if (pair == 'redGreen')
-        colors = [ColorName.RED, ColorName.GREEN]
-    else if (pair == 'greenOrange')
-        colors = [ColorName.ORANGE, ColorName.GREEN]
-    else if (pair == 'orangeBlue')
-        colors = [ColorName.ORANGE, ColorName.BLUE]
-    else
-        colors = [ColorName.BLUE, ColorName.RED]
-
-    let cornerIdx = f2l.rcl.getCornerPosition(colors[0], colors[1], ColorName.WHITE)[0] as number;
-    let edgeIdx = f2l.rcl.getEdgePosition(colors[0], colors[1])[0] as number;
-    console.log(f2l.insertPair(cornerIdx, edgeIdx));
+    rubiks_cube.setFinishAnimationAction(cb, true);
+    // let res = guide.oll();
+    // let moves = res.edge_orientation.concat(res.corner_orientation);
+    // CFOPGuide.applyTurnsCube(rubiks_cube, moves)
 });
 
 document.getElementById('undoLast')?.addEventListener('click', e => {

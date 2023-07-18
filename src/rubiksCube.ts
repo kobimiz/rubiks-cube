@@ -32,6 +32,7 @@ class RubiksCube {
 
     animation: (() => void) | null;
     actionQueue: (() => void)[];
+    queueEmptyCallback: (() => void) | null;
 
     isSolved: boolean;
     turns: Turn[];
@@ -54,6 +55,7 @@ class RubiksCube {
 
         this.animation = null;
         this.actionQueue = [];
+        this.queueEmptyCallback = null;
 
         this.isSolved = false; // technically it is...
         this.turns = [];
@@ -128,6 +130,9 @@ class RubiksCube {
         this.cubes.forEach((cube, i) => {
             cube.draw(view)
         });
+
+        if (!this.animation && this.actionQueue.length == 0 && this.queueEmptyCallback)
+            this.queueEmptyCallback();
     }
 
     gen_animation(indices: Array<number>, frame_count: number, rotation: mat4, callback : ((rc: RubiksCube) => void) | null = null) {
@@ -418,6 +423,14 @@ class RubiksCube {
         let right = this.getFaceColors(Face.RIGHT).join('');
 
         return `${front}${back}${up}${down}${left}${right}`;
+    }
+
+    setFinishAnimationAction(callback: () => void, once: boolean) {
+        this.queueEmptyCallback = () => {
+            if (once)
+                this.queueEmptyCallback = null;
+            callback();
+        }
     }
 }
 
