@@ -65,17 +65,23 @@ let drawInterval = setInterval(draw, time_delta, gl);
 document.addEventListener('keydown', e => {
     let side_to_rotate = e.key.toLowerCase();
     if (side_to_rotate == 'r')
-        rubiks_cube.turnRight(e.shiftKey);
+        rubiks_cube.turnRight(e.shiftKey, e.getModifierState('CapsLock'));
     else if (side_to_rotate == 'u')
-        rubiks_cube.turnUp(e.shiftKey);
+        rubiks_cube.turnUp(e.shiftKey, e.getModifierState('CapsLock'));
     else if (side_to_rotate == 'l')
-        rubiks_cube.turnLeft(e.shiftKey);
+        rubiks_cube.turnLeft(e.shiftKey, e.getModifierState('CapsLock'));
     else if (side_to_rotate == 'd')
-        rubiks_cube.turnDown(e.shiftKey);
+        rubiks_cube.turnDown(e.shiftKey, e.getModifierState('CapsLock'));
     else if (side_to_rotate == 'f')
-        rubiks_cube.turnFront(e.shiftKey);
+        rubiks_cube.turnFront(e.shiftKey, e.getModifierState('CapsLock'));
     else if (side_to_rotate == 'b')
-        rubiks_cube.turnBack(e.shiftKey);
+        rubiks_cube.turnBack(e.shiftKey, e.getModifierState('CapsLock'));
+    else if (side_to_rotate == 'm')
+        rubiks_cube.turnM(e.shiftKey);
+    else if (side_to_rotate == 'e')
+        rubiks_cube.turnE(e.shiftKey);
+    else if (side_to_rotate == 's')
+        rubiks_cube.turnS(e.shiftKey);
     else if (e.key == 'ArrowRight')
         rubiks_cube.turnY(true);
     else if (e.key == 'ArrowLeft')

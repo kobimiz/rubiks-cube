@@ -177,9 +177,11 @@ class RubiksCube {
                     return `<span class='generatedMove'>${turn.move}${turn.count > 1 ? turn.count:''}${turn.count == 1 && turn.inverse ? "'":""}</span>`
                 }).join(' ');        
     }
-
-    turnRight(inverse: boolean = false, isUserMove = true) {
+    // TODO fix isUserMove parameter order (isDefault was added afterwards in the middle)
+    turnRight(inverse: boolean = false, isDouble = false, isUserMove = true) {
         let right = FacePermutor.getFaceIndices(Face.RIGHT) as number[];
+        if (isDouble)
+            right = right.concat(FacePermutor.getFaceIndices(Face.M) as number[])
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -190,13 +192,17 @@ class RubiksCube {
 
         this.actionQueue.push(this.gen_animation(right, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turn(Face.RIGHT, inverse);
+            if (isDouble)
+                rubiksCube.rubiksCubeLogic.turn(Face.M, !inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }))
         this.updateScrambleString('R', inverse, isUserMove);
     }
 
-    turnUp(inverse: boolean = false, isUserMove = true) {
+    turnUp(inverse: boolean = false, isDouble = false, isUserMove = true) {
         let up = FacePermutor.getFaceIndices(Face.UP) as number[];
+        if (isDouble)
+            up = up.concat(FacePermutor.getFaceIndices(Face.E) as number[])
         let frame_count = 10;
 
 
@@ -208,14 +214,19 @@ class RubiksCube {
         
         this.actionQueue.push(this.gen_animation(up, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turn(Face.UP, inverse);
+            if (isDouble)
+                rubiksCube.rubiksCubeLogic.turn(Face.E, !inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
 
         this.updateScrambleString('U', inverse, isUserMove);
     }
 
-    turnLeft(inverse: boolean = false, isUserMove = true) {
+    turnLeft(inverse: boolean = false, isDouble = false, isUserMove = true) {
         let left = FacePermutor.getFaceIndices(Face.LEFT) as number[];
+        if (isDouble)
+            left = left.concat(FacePermutor.getFaceIndices(Face.M) as number[])
+
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -226,14 +237,19 @@ class RubiksCube {
         
         this.actionQueue.push(this.gen_animation(left, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turn(Face.LEFT, inverse);
+            if (isDouble)
+                rubiksCube.rubiksCubeLogic.turn(Face.M, inverse);
+
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
 
         this.updateScrambleString('L', inverse, isUserMove);
     }
 
-    turnDown(inverse: boolean = false, isUserMove = true) {
+    turnDown(inverse: boolean = false, isDouble = false, isUserMove = true) {
         let down = FacePermutor.getFaceIndices(Face.DOWN) as number[];
+        if (isDouble)
+            down = down.concat(FacePermutor.getFaceIndices(Face.E) as number[])
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -244,13 +260,17 @@ class RubiksCube {
         
         this.actionQueue.push(this.gen_animation(down, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turn(Face.DOWN, inverse);
+            if (isDouble)
+                rubiksCube.rubiksCubeLogic.turn(Face.E, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
         this.updateScrambleString('D', inverse, isUserMove);
     }
 
-    turnFront(inverse: boolean = false, isUserMove = true) {
+    turnFront(inverse: boolean = false, isDouble = false, isUserMove = true) {
         let front = FacePermutor.getFaceIndices(Face.FRONT) as number[];
+        if (isDouble)
+            front = front.concat(FacePermutor.getFaceIndices(Face.S) as number[])
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -261,13 +281,17 @@ class RubiksCube {
         
         this.actionQueue.push(this.gen_animation(front, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turn(Face.FRONT, inverse);
+            if (isDouble)
+                rubiksCube.rubiksCubeLogic.turn(Face.S, inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
         this.updateScrambleString('F', inverse, isUserMove);
     }
 
-    turnBack(inverse: boolean = false, isUserMove = true) {
+    turnBack(inverse: boolean = false, isDouble = false, isUserMove = true) {
         let back = FacePermutor.getFaceIndices(Face.BACK) as number[];
+        if (isDouble)
+            back = back.concat(FacePermutor.getFaceIndices(Face.S) as number[])
         let frame_count = 10;
 
         let rotation = mat4.create();
@@ -278,9 +302,62 @@ class RubiksCube {
         
         this.actionQueue.push(this.gen_animation(back, 10, rotation, rubiksCube => {
             rubiksCube.rubiksCubeLogic.turn(Face.BACK, inverse);
+            if (isDouble)
+                rubiksCube.rubiksCubeLogic.turn(Face.S, !inverse);
             rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
         }));
         this.updateScrambleString('B', inverse, isUserMove);
+    }
+
+    turnM(inverse: boolean = false, isUserMove = true) {
+        let M = FacePermutor.getFaceIndices(Face.M) as number[];
+        let frame_count = 10;
+
+        let rotation = mat4.create();
+        if (inverse) 
+            mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.xAxis)
+        else 
+            mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.xAxis)
+        
+        this.actionQueue.push(this.gen_animation(M, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turn(Face.M, inverse);
+            rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
+        }));
+        this.updateScrambleString('M', inverse, isUserMove);
+    }
+
+    turnE(inverse: boolean = false, isUserMove = true) {
+        let E = FacePermutor.getFaceIndices(Face.E) as number[];
+        let frame_count = 10;
+
+        let rotation = mat4.create();
+        if (inverse) 
+            mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.yAxis)
+        else 
+            mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.yAxis)
+        
+        this.actionQueue.push(this.gen_animation(E, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turn(Face.E, inverse);
+            rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
+        }));
+        this.updateScrambleString('E', inverse, isUserMove);
+    }
+
+    turnS(inverse: boolean = false, isUserMove = true) {
+        let S = FacePermutor.getFaceIndices(Face.S) as number[];
+        let frame_count = 10;
+
+        let rotation = mat4.create();
+        if (inverse) 
+            mat4.rotate(rotation, rotation, Math.PI / (frame_count * 2), this.zAxis)
+        else 
+            mat4.rotate(rotation, rotation, -Math.PI / (frame_count * 2), this.zAxis)
+        
+        this.actionQueue.push(this.gen_animation(S, 10, rotation, rubiksCube => {
+            rubiksCube.rubiksCubeLogic.turn(Face.S, inverse);
+            rubiksCube.isSolved = rubiksCube.rubiksCubeLogic.isSolved();
+        }));
+        this.updateScrambleString('S', inverse, isUserMove);
     }
 
     turnX(inverse: boolean = false) {

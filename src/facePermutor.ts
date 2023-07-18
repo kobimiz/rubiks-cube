@@ -46,8 +46,8 @@ class FacePermutor {
         [Face.DOWN , [0 ,1 ,2 ,9 ,10,11,18,19,20]],
         [Face.RIGHT, [2 ,5 ,8 ,11,14,17,20,23,26]],
         [Face.LEFT , [0 ,3 ,6 ,9 ,12,15,18,21,24]],
-        [Face.S    , [1 ,4 ,7 ,10,13,16,19,22,25]],
-        [Face.M    , [9 ,10,11,12,13,14,15,16,17]],
+        [Face.M    , [1 ,4 ,7 ,10,13,16,19,22,25]],
+        [Face.S    , [9 ,10,11,12,13,14,15,16,17]],
         [Face.E    , [3 ,4 ,5 ,12,13,14,21,22,23]],
     ]);
 
@@ -82,7 +82,7 @@ class FacePermutor {
                 Array.from(perm, ([a,b]) => [b,a])
             );
 
-            if (face == Face.BACK || face == Face.LEFT || face == Face.UP) {
+            if (face == Face.BACK || face == Face.LEFT || face == Face.UP || face == Face.M) {
                 FacePermutor.perms.set(face, inversePerm);
                 FacePermutor.inversePerms.set(face, perm);
             } else {
