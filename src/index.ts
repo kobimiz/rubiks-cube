@@ -4,13 +4,19 @@ import * as cubeVertex from './shaders/cube-vert';
 import * as cubeFragment from './shaders/cube-frag';
 import * as borderFrag from './shaders/border-frag';
 import { RubiksCube } from "./rubiksCube";
-import { Cube } from "./cube";
+import { ColorName, Cube } from "./cube";
 import { glMatrix, mat4, vec3, quat} from "gl-matrix";
 import { Shuffler } from "./shuffler";
 import { FacePermutor } from "./facePermutor";
 import * as cubeSolver from 'cube-solver';
 
+import { CFOPGuide } from "./cfopGuide";
+import { F2LCases } from "./f2lCases";
 
+console.log(cubeSolver)
+
+// TODO handle bug when cube state (specifically solving) gets messed
+// up when pressing buttons while animation is already playing
 let canvas = document.getElementsByTagName('canvas')[0];
 let gl = canvas.getContext('webgl2', { stencil: true }); // stencil option is important
 
@@ -97,7 +103,7 @@ document.getElementById('shuffle')?.addEventListener('click', e => {
             drawInterval = setInterval(draw, time_delta, gl) as unknown as NodeJS.Timer;
         }
     }, time_delta) as unknown as NodeJS.Timer;
-    console.log(shuffler.shuffle(22));
+    console.log(shuffler.shuffle(15));
     
 });
 
@@ -131,6 +137,163 @@ document.getElementById('solve')?.addEventListener('click', e => {
         }
     });
 });
+
+document.getElementById('specificShuffle')?.addEventListener('click', e => {
+    let solve = cubeSolver.solve(rubiks_cube.getScrambleString(), 'cross').split(' ');
+    solve.forEach(turn => {
+        let face = turn.at(0);
+        let inverse = false;
+        let count = 1;
+        
+        if (turn.length == 2) {
+            if (turn.at(1) == "'")
+            inverse = true;
+            else
+            count = 2;
+        }
+        
+        for (let i = 0; i < count; i++) {
+            if (face == 'F')
+                rubiks_cube.turnFront(inverse)
+            else if (face == 'B')
+                rubiks_cube.turnBack(inverse)
+            else if (face == 'R')
+                rubiks_cube.turnRight(inverse)
+            else if (face == 'L')
+                rubiks_cube.turnLeft(inverse)
+            else if (face == 'U')
+                rubiks_cube.turnUp(inverse)
+            else if (face == 'D')
+                rubiks_cube.turnDown(inverse)
+        }
+    });
+});
+
+document.getElementById('custom')?.addEventListener('click', e => {
+    // R D' B' L R L D R2 B' F' B' L' U R F' L' D2 L F D' R'
+    let removed = 5;
+    let solve = "R D' B' L R L D R2 B' F' B' L' U R F' L' D2 L F D' R' U2 B' U B F U F'".split(" ");
+    for (let i = 0; i < removed; i++) {
+        solve.pop();
+    }
+
+    solve.forEach(turn => {
+        let face = turn.at(0);
+        let inverse = false;
+        let count = 1;
+        
+        if (turn.length == 2) {
+            if (turn.at(1) == "'")
+            inverse = true;
+            else
+            count = 2;
+        }
+        
+        for (let i = 0; i < count; i++) {
+            if (face == 'F')
+                rubiks_cube.turnFront(inverse)
+            else if (face == 'B')
+                rubiks_cube.turnBack(inverse)
+            else if (face == 'R')
+                rubiks_cube.turnRight(inverse)
+            else if (face == 'L')
+                rubiks_cube.turnLeft(inverse)
+            else if (face == 'U')
+                rubiks_cube.turnUp(inverse)
+            else if (face == 'D')
+                rubiks_cube.turnDown(inverse)
+        }
+    });
+
+    let guide = new CFOPGuide(rubiks_cube.rubiksCubeLogic);
+    let inter = setInterval(() => {
+        if (rubiks_cube.actionQueue.length == 0) {
+            setTimeout(() => {
+                // let res = guide.iterativeDeepening(removed + 1, true) as any[];
+                // console.log(res[2]);
+            }, 20 * time_delta);
+            clearInterval(inter);
+        }
+    }, 100)
+});
+
+let lastMoves : string[] = []
+let guide = new CFOPGuide(rubiks_cube.rubiksCubeLogic);
+document.getElementById('idSearch')?.addEventListener('click', e => {
+    let res = guide.solveNextF2LPair();
+
+    lastMoves = res.solution.concat(res.rotation_sol).concat(res.insertion_sol);
+    // lastMoves = res.solution.concat(res.insertion ? res.insertion : []);
+    
+    console.log(lastMoves)
+    console.log(res);
+    if (!res.insertion_sol)
+        console.log('(insertion null)')
+    if (!res.rotation_sol)
+        console.log('(rotation null)')
+
+    lastMoves.forEach(turn => {
+        if (turn[0] == 'y')
+            rubiks_cube.turnY(turn.length > 1);
+        else if (turn[0] == 'x')
+            rubiks_cube.turnX(turn.length > 1);
+        else if (turn[0] == 'R')
+            rubiks_cube.turnRight(turn.length > 1);
+        else if (turn[0] == 'L')
+            rubiks_cube.turnLeft(turn.length > 1);
+        else if (turn[0] == 'U')
+            rubiks_cube.turnUp(turn.length > 1);
+        else if (turn[0] == 'D')
+            rubiks_cube.turnDown(turn.length > 1);
+        else if (turn[0] == 'F')
+            rubiks_cube.turnFront(turn.length > 1);
+        else if (turn[0] == 'B')
+            rubiks_cube.turnBack(turn.length > 1);
+    })
+
+    let f2l = new F2LCases(rubiks_cube.rubiksCubeLogic);
+
+    let pair = res.pair;
+    let colors;
+
+    if (pair == 'redGreen')
+        colors = [ColorName.RED, ColorName.GREEN]
+    else if (pair == 'greenOrange')
+        colors = [ColorName.ORANGE, ColorName.GREEN]
+    else if (pair == 'orangeBlue')
+        colors = [ColorName.ORANGE, ColorName.BLUE]
+    else
+        colors = [ColorName.BLUE, ColorName.RED]
+
+    let cornerIdx = f2l.rcl.getCornerPosition(colors[0], colors[1], ColorName.WHITE)[0] as number;
+    let edgeIdx = f2l.rcl.getEdgePosition(colors[0], colors[1])[0] as number;
+    console.log(f2l.insertPair(cornerIdx, edgeIdx));
+});
+
+document.getElementById('undoLast')?.addEventListener('click', e => {
+    lastMoves.reverse();
+
+    lastMoves.forEach(turn => {
+        if (turn[0] == 'y')
+            rubiks_cube.turnY(turn.length <= 1);
+        else if (turn[0] == 'R')
+            rubiks_cube.turnRight(turn.length <= 1);
+        else if (turn[0] == 'L')
+            rubiks_cube.turnLeft(turn.length <= 1);
+        else if (turn[0] == 'U')
+            rubiks_cube.turnUp(turn.length <= 1);
+        else if (turn[0] == 'D')
+            rubiks_cube.turnDown(turn.length <= 1);
+        else if (turn[0] == 'F')
+            rubiks_cube.turnFront(turn.length <= 1);
+        else if (turn[0] == 'B')
+            rubiks_cube.turnBack(turn.length <= 1);
+    })
+
+    lastMoves = [];
+});
+
+console.log(guide)
 
 // document.addEventListener('keydown', e => {
 //     const cameraSpeed = 0.2;
