@@ -15,22 +15,25 @@ export const ColorNames : {[x in ColorName]: string} = {
     [ColorName.RED]: 'Red',
 }
 
+type Turn = { face: Face, inverse: boolean };
+
 class CFOPGuide {
     rubiksCubeLogic: RubiksCubeLogic
-    possibleMoves: { face: Face, inverse: boolean }[]
     target: (rubiksCubeLogic: RubiksCubeLogic) => boolean;
 
-    f2lPairs: { redGreen: boolean, greenOrange: boolean, orangeBlue: boolean, blueRed: boolean }
+    // f2lPairs: { redGreen: boolean, greenOrange: boolean, orangeBlue: boolean, blueRed: boolean }
+    targetPairs: string[]
+    pairProgress: number
 
     constructor(rubiksCubeLogic: RubiksCubeLogic) {
         this.rubiksCubeLogic = rubiksCubeLogic;
 
-        this.possibleMoves = [];
-        let faces : Face[] = [ Face.BACK, Face.FRONT, Face.UP, Face.LEFT, Face.RIGHT ];
-        for (let i = 0; i < faces.length; i++) {
-            this.possibleMoves.push({ face: faces[i], inverse: true });
-            this.possibleMoves.push({ face: faces[i], inverse: false });
-        }
+        // let faces : Face[] = [ Face.BACK, Face.FRONT, Face.UP, Face.LEFT, Face.RIGHT ];
+        // let faces : Face[] = [ Face.UP, Face.RIGHT, Face.LEFT, Face.E ];
+        // for (let i = 0; i < faces.length; i++) {
+        //     this.possibleMoves.push({ face: faces[i], inverse: true });
+        //     this.possibleMoves.push({ face: faces[i], inverse: false });
+        // }
 
         this.target = (rc: RubiksCubeLogic) => {
             // let face = Face.DOWN;
@@ -57,7 +60,11 @@ class CFOPGuide {
             let str = rc.toString()
             // let res = str.match(/55.55.....4..4..............1.11111....00.00....33..../)
             // first pair, corner on top
-            let res = str.match(this.targetStringToRegex('GG.GG.... .B..B.... ......... .W.WWWWW. ...RR.RR. ...OO....'))
+            // let res = str.match(CFOPGuide.targetStringToRegex('GG.GG.... .B..B.... ......... .W.WWWWW. ...RR.RR. ...OO....'))
+            // first pair is redGreen
+            let res = str.match(CFOPGuide.targetStringToRegex('.RR.RR... .O..O.... ......... .W.WWW.WW ...BB.... ...GG.GG.'))
+            //                                                 0RR3RR433 4O04O0203 422325351 012111111 223444421 545552555
+            //                                                 200200125 335533331 244320000 213111011 524442444 153554552
             return res != null;
 
 
@@ -70,15 +77,60 @@ class CFOPGuide {
         }
 
         // TODO mark off 'solved by accident' pairs (using regex and string rep)
-        this.f2lPairs = {
-            redGreen: false,
-            greenOrange: false,
-            orangeBlue: false,
-            blueRed: false,
-        }
+        this.targetPairs = ['redGreen', 'greenOrange', 'orangeBlue', 'blueRed']
+        this.pairProgress = 0;
+        // this.f2lPairs = {
+        //     redGreen: false,
+        //     greenOrange: false,
+        //     orangeBlue: false,
+        //     blueRed: false,
+        // }
     }
 
-    targetStringToRegex(str: string) {
+    // assumes yellow on top, get pair
+    // TODO type the pair
+    isRotationTarget(rcl: RubiksCubeLogic, pair: string) {
+        // find faces with these colors
+        let faceColors = {
+            [Face.FRONT]: rcl.cubes[22].getColor(Face.FRONT),
+            [Face.RIGHT]: rcl.cubes[14].getColor(Face.RIGHT),
+            [Face.UP]: rcl.cubes[16].getColor(Face.UP),
+        };
+        let colors;
+        if (pair == 'redGreen')
+            colors = [ColorName.RED, ColorName.GREEN]
+        else if (pair == 'greenOrange')
+            colors = [ColorName.ORANGE, ColorName.GREEN]
+        else if (pair == 'orangeBlue')
+            colors = [ColorName.ORANGE, ColorName.BLUE]
+        else
+            colors = [ColorName.BLUE, ColorName.RED]
+
+        return colors.includes(faceColors[Face.FRONT]) && colors.includes(faceColors[Face.RIGHT]) && faceColors[Face.UP] == ColorName.YELLOW;
+    }
+
+    static applyTurns(rcl: RubiksCubeLogic, turns: string[]) {
+        turns.forEach(turn => {
+            if (turn[0] == 'y')
+                rcl.turnY(turn.length > 1);
+            else if (turn[0] == 'x')
+                rcl.turnX(turn.length > 1);
+            else if (turn[0] == 'R')
+                rcl.turn(Face.RIGHT, turn.length > 1);
+            else if (turn[0] == 'L')
+                rcl.turn(Face.LEFT, turn.length > 1);
+            else if (turn[0] == 'U')
+                rcl.turn(Face.UP, turn.length > 1);
+            else if (turn[0] == 'D')
+                rcl.turn(Face.DOWN, turn.length > 1);
+            else if (turn[0] == 'F')
+                rcl.turn(Face.FRONT, turn.length > 1);
+            else if (turn[0] == 'B')
+                rcl.turn(Face.BACK, turn.length > 1);
+        });
+    }
+
+    static targetStringToRegex(str: string) {
         // GG.GG.... .B..B.... ......... .W.WWWWW. ...RR.RR. ...OO....
             // enum Face {
             //     RIGHT, 0
@@ -125,16 +177,71 @@ class CFOPGuide {
         // return cubeSolver.solve(this.rubiksCube.getScrambleString(), 'cross');
     }
 
+    getPossibleMoves(faces: Face[]) {
+        let res : Turn[] = []
+        faces.forEach(face => {
+            res.push({ face: face, inverse: false });
+            res.push({ face: face, inverse: true });
+        })
+        return res;
+    }
+
+    formatSol(sol: Turn[]) {
+        return sol.map(turn => {
+            if (turn.face == Face.BACK)
+                return `B${turn.inverse ? "'" : ''}`
+            else if (turn.face == Face.FRONT)
+                return `F${turn.inverse ? "'" : ''}`
+            else if (turn.face == Face.RIGHT)
+                return `R${turn.inverse ? "'" : ''}`
+            else if (turn.face == Face.LEFT)
+                return `L${turn.inverse ? "'" : ''}`
+            else if (turn.face == Face.DOWN)
+                return `D${turn.inverse ? "'" : ''}`
+            else if (turn.face == Face.UP)
+                return `U${turn.inverse ? "'" : ''}`
+            else if (turn.face == Face.M)
+                return `x${turn.inverse ? "'" : ''}`
+            else if (turn.face == Face.E)
+                return `y${turn.inverse ? "'" : ''}`
+            return 'Unknown'
+        });
+    }
+
+    generateNextTargetRegex() {
+        // redGreen: false,
+        // greenOrange: false,
+        // orangeBlue: false,
+        // blueRed: false,
+
+        // front: green, right: orange, up: yellow
+        // front     back      up        down      left      right
+        // .G.G..... .B..B.... ......... .W.WWW.W. ...RR.... ...OO....  <-- cross
+        // .RR.RR... .O..O.... ......... .W.WWW.WW ...BB.... ...GG.GG.  <-- redGreen
+        // GGGGGG... .B..B.... ......... .W.WWWWWW ...RR.RR. ...OO.OO.  <-- greenOrange
+        // OOOOOO... RR.RR.... ......... WW.WWWWWW GG.GG.GG. ...BB.BB.  <-- orangeBlue
+        // BBBBBB... GGGGGG... ......... WWWWWWWWW OO.OO.OO. RR.RR.RR.  <-- blueRed
+        if (this.pairProgress == 0)
+            return CFOPGuide.targetStringToRegex('.RR.RR... .O..O.... ......... .W.WWW.WW ...BB.... ...GG.GG.')
+        else if (this.pairProgress == 1)
+            return CFOPGuide.targetStringToRegex('GGGGGG... .B..B.... ......... .W.WWWWWW ...RR.RR. ...OO.OO.')
+        else if (this.pairProgress == 2)
+            return CFOPGuide.targetStringToRegex('OOOOOO... RR.RR.... ......... WW.WWWWWW GG.GG.GG. ...BB.BB.')
+        else if (this.pairProgress == 3)
+            return CFOPGuide.targetStringToRegex('BBBBBB... GGGGGG... ......... WWWWWWWWW OO.OO.OO. RR.RR.RR.')
+        return null;
+    }
+
     // TODO make sure yellow is on top
     solveNextF2LPair(depth = 22) {
         let solution : string[] = [];
 
-        let unsolvedPairs = Object.keys(this.f2lPairs).filter(key => !this.f2lPairs[key as 'redGreen']);
-        if (unsolvedPairs.length == 0)
-            return { solution: [], insertion: [] };
+        // let unsolvedPairs = Object.keys(this.f2lPairs).filter(key => !this.f2lPairs[key as 'redGreen']);
+        if (this.pairProgress == this.targetPairs.length)
+            return { solution: [], insertion_sol: [], pair: '', rotation_sol: [] };
 
-        // let nextPair = unsolvedPairs[0];
-        let nextPair = 'redGreen';
+        let nextPair = this.targetPairs[this.pairProgress];
+        // let nextPair = 'redGreen';
         let pair_map = {
             redGreen: [ColorName.GREEN, ColorName.RED],
             greenOrange: [ColorName.GREEN, ColorName.ORANGE],
@@ -252,51 +359,58 @@ class CFOPGuide {
                 copy.turn(Face.BACK, turn.length > 1);
         }
 
-        let insertF2L = this.solve(copy, 1, new Set());
-        let temp = null;
-        if (insertF2L != false) {
-            temp = insertF2L.map(turn => {
-                if (turn.face == Face.RIGHT)
-                    return `R${turn.inverse ? "'" : ''}`;
-                else if (turn.face == Face.LEFT)
-                    return `L${turn.inverse ? "'" : ''}`;
-                else if (turn.face == Face.UP)
-                    return `U${turn.inverse ? "'" : ''}`;
-                else if (turn.face == Face.DOWN)
-                    return `D${turn.inverse ? "'" : ''}`;
-                else if (turn.face == Face.FRONT)
-                    return `F${turn.inverse ? "'" : ''}`;
-                else if (turn.face == Face.BACK)
-                    return `B${turn.inverse ? "'" : ''}`;
-                return 'Unknown'                    
-            });
-        }
+        let rotation_target = (rcl: RubiksCubeLogic) => {
+            return this.isRotationTarget(rcl, nextPair);
+        };
 
-        // // get corner piece out of the way
-        // // if ()
-        // if (corner_index == corners_indices.DFR)
-        //     solution = solution.concat("R U R'".split(' '));
-        // else if (corner_index == corners_indices.DBR)
-        //     solution = solution.concat("R' U' R".split(' '));
-        // else if (corner_index == corners_indices.DBL)
-        //     solution = solution.concat("L U L'".split(' '));
-        // else if (corner_index == corners_indices.DLF)
-        //     solution = solution.concat("L' U' L".split(' '));
+        // TODO make sure max is right
+        copy = this.rubiksCubeLogic.copy();
+        CFOPGuide.applyTurns(copy, solution);
 
-
-
-
-        this.f2lPairs[nextPair as 'redGreen'] = true;
+        let rotation_sol = this.iterativeDeepening(copy, 6, this.getPossibleMoves([ Face.E, Face.M ]), rotation_target);
+        let rotation_sol_formatted = (rotation_sol ? (this.formatSol(rotation_sol[2] as Turn[])) : []);
+        CFOPGuide.applyTurns(copy, rotation_sol_formatted);
         
-        // return FacePermutor.getFaceIndices(Face.LEFT)
-        //         ?.map(i => {
-        //             let face = this.rubiksCubeLogic.cubes[i].permutor.obj[Face.LEFT]
-        //             let color = this.rubiksCubeLogic.cubes[i].color[face as 0];
-        //             return ColorNames[color];
-        //         });
+        let is_righty = false;
+        corner = copy.getCornerPosition(ColorName.WHITE, colors[0], colors[1]);
+        edge = copy.getEdgePosition(colors[0], colors[1]);
+        corner_index = corner[0] as number;
+        edge_index = edge[0] as number;
+
+        if ((corner_index == 6 && edge_index == 15) ||
+            (corner_index == 8 && edge_index == 7) ||
+            (corner_index == 26 && edge_index == 17) ||
+            (corner_index == 24 && edge_index == 25)) {
+                is_righty = true;
+        }
+        // let faces = [ (is_righty ? Face.RIGHT : Face.LEFT), Face.UP, Face.E ];
+        let faces;
+        if (is_righty)
+            faces = [ Face.RIGHT, Face.UP ];
+        else 
+            faces = [ Face.FRONT, Face.UP ];
+
+        // let insertF2L = this.solve(copy, 4, this.getPossibleMoves(faces), rotation_target, '');
+        let target = (rc: RubiksCubeLogic) => {
+            let str = rc.toString()
+            let nextTargetRegex = this.generateNextTargetRegex();
+            if (!nextTargetRegex)
+                return false;
+            let res = str.match(nextTargetRegex);
+            return res != null;
+        }
+        // TODO make sure max is right
+        let insert_sol = this.iterativeDeepening(copy, 8, this.getPossibleMoves(faces), target);
+        let insert_sol_formatted = (insert_sol ? (this.formatSol(insert_sol[2] as Turn[])) : []);
+
+        // this.f2lPairs[nextPair as 'redGreen'] = true;
+        this.pairProgress += 1;
+        
         return {
             solution,
-            insertion: temp
+            rotation_sol: rotation_sol_formatted,
+            insertion_sol: insert_sol_formatted,
+            pair: nextPair
         };
     }
 
@@ -316,76 +430,76 @@ class CFOPGuide {
 
         return res;
     }
-    // TODO
-    // getPieceFace(index: number) {
-    //     let keys = FacePermutor.faceMap.keys();
-    //     let iter = keys.next();
-    //     while (!iter.done) {
-    //         if (FacePermutor.faceMap.get(iter.value)?.includes(index)) {
-    //             return iter.value;
-    //         }
-    //         iter = keys.next();
-    //     }
 
-    //     return null;
-    // }
-
-
+    // Assumes f2l is done
     oll() {
+
 
     }
 
+    // Assumes oll is done
     pll() {
 
     }
 
-    solve(rubiksCubeLogic: RubiksCubeLogic, depth = 25, visited: Set<string>) : false | { face: Face, inverse: boolean }[] {
+    solve(rubiksCubeLogic: RubiksCubeLogic, depth = 25, possible_moves: Turn[], is_target: (rcl: RubiksCubeLogic) => boolean, str: string) : null | Turn[] {
         // if (visited.has(rubiksCubeLogic.toString()))
         //     return false;
 
-        if (this.target(rubiksCubeLogic))
+        // if (this.target(rubiksCubeLogic))
+        if (is_target(rubiksCubeLogic))
             return [];
 
         if (depth == 0)
-            return false;
+            return null;
         
-        for (let i = 0; i < this.possibleMoves.length; i++) {
+        // console.log(`${depth}: ${str}`)
+        for (let i = 0; i < possible_moves.length; i++) {
             // move- resulting state
             let resultingState = rubiksCubeLogic.copy();
-            resultingState.turn(this.possibleMoves[i].face, this.possibleMoves[i].inverse);
+            // resultingState.turn(possible_moves[i].face, possible_moves[i].inverse);
+            // TODO clean
+            if (possible_moves[i].face == Face.E)
+                resultingState.turnY(possible_moves[i].inverse);
+            else if (possible_moves[i].face == Face.M)
+                resultingState.turnX(possible_moves[i].inverse);
+            else
+                resultingState.turn(possible_moves[i].face, possible_moves[i].inverse);
             
-            let res = this.solve(resultingState, depth - 1, visited);
+            let newStr = `${str} ${this.formatSol([possible_moves[i]])[0]}`;
+            let res = this.solve(resultingState, depth - 1, possible_moves, is_target, newStr);
             // visited.add(resultingState.toString())
             
             if (res)
-                return [this.possibleMoves[i]].concat(res);
+                return [possible_moves[i]].concat(res);
         }
         
-        return false;
+        return null;
     }
 
-    iterativeDeepening(max_depth: number) {
-        let copy = this.rubiksCubeLogic.copy();
+    iterativeDeepening(rcl: RubiksCubeLogic, max_depth: number, possible_moves: Turn[], is_target: (rcl: RubiksCubeLogic) => boolean) {
+        let copy = rcl.copy();
         // Undo rotations
-        copy.rotations.slice().reverse().forEach(rot => {
-            if (rot == CubeRotation.X)
-                copy.turnX(true)
-            else if (rot == CubeRotation.Xp)
-                copy.turnX(false)
-            else if (rot == CubeRotation.Y)
-                copy.turnY(true)
-            else if (rot == CubeRotation.Yp)
-                copy.turnY(false)
-        });
+        // copy.rotations.slice().reverse().forEach(rot => {
+        //     if (rot == CubeRotation.X)
+        //         copy.turnX(true)
+        //     else if (rot == CubeRotation.Xp)
+        //         copy.turnX(false)
+        //     else if (rot == CubeRotation.Y)
+        //         copy.turnY(true)
+        //     else if (rot == CubeRotation.Yp)
+        //         copy.turnY(false)
+        // });
 
         for (let i = 1; i <= max_depth; i++) {
             // const element = array[i];
-            let res = this.solve(copy, i, new Set());
+            let res = this.solve(copy, i, possible_moves, is_target, '');
             // console.log(`${i}: ${res}`)
             
             if (res)
                 return ['Undo: ', copy.rotations, res];
         }
+        return null;
     }
 }
 
