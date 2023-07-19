@@ -37,7 +37,7 @@ FacePermutor.init();
 
 let rubiks_cube = new RubiksCube(3, gl, shader, shader_outline)
 
-let fps = 30;
+let fps = 300;
 let time_delta = 1000 / fps;
 
 let messageElement = document.getElementById('message') as HTMLElement;
@@ -236,12 +236,17 @@ document.getElementById('idSearch')?.addEventListener('click', e => {
         i++;
         if (i < 4)
             rubiks_cube.setFinishAnimationAction(cb, true);
+        else {
+            rubiks_cube.setFinishAnimationAction(() => {
+                let res = guide.oll();
+                console.log(res)
+                let moves = res.edge_orientation.concat(res.corner_orientation);
+                CFOPGuide.applyTurnsCube(rubiks_cube, moves)
+            }, true);
+        }
     }
 
     rubiks_cube.setFinishAnimationAction(cb, true);
-    // let res = guide.oll();
-    // let moves = res.edge_orientation.concat(res.corner_orientation);
-    // CFOPGuide.applyTurnsCube(rubiks_cube, moves)
 });
 
 document.getElementById('undoLast')?.addEventListener('click', e => {

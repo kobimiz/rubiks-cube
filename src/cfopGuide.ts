@@ -4,6 +4,7 @@ import * as cubeSolver from 'cube-solver';
 import { Edges, Corners } from "./facePermutor";
 import { CubeRotation, RubiksCubeLogic } from "./rubiksCubeLogic";
 import { F2LCases } from "./f2lCases";
+import { RubiksCube } from "./rubiksCube";
 
 export const ColorNames : {[x in ColorName]: string} = {
     [ColorName.ORANGE]: 'Orange',
@@ -17,6 +18,11 @@ export const ColorNames : {[x in ColorName]: string} = {
 
 type Turn = { face: Face, inverse: boolean };
 
+type EdgeOrientation = { full: RegExp, opposite: RegExp, adjacent: RegExp, none: RegExp }
+type EdgeOrientationAlgs = { full: string[], opposite: string[], adjacent: string[], none: string[] }
+type CornerOrientation = { full: RegExp, bowtie: RegExp, headlights: RegExp, sune: RegExp, car: RegExp }
+type CornerOrientationAlgs = { full: string[], bowtie: string[], headlights: string[], chameleon: string[], sune: string[], anti_sune: string[], car: string[], blinker: string[] }
+
 class CFOPGuide {
     rubiksCubeLogic: RubiksCubeLogic
     target: (rubiksCubeLogic: RubiksCubeLogic) => boolean;
@@ -25,15 +31,16 @@ class CFOPGuide {
     targetPairs: string[]
     pairProgress: number
 
+    edge_orientation: EdgeOrientation
+    edge_orientation_algs: EdgeOrientationAlgs
+    corner_orientation: CornerOrientation
+    corner_orientation_algs: CornerOrientationAlgs
+
+    edge_orientation_case_order: string[];
+    corner_orientation_case_order: string[];
+
     constructor(rubiksCubeLogic: RubiksCubeLogic) {
         this.rubiksCubeLogic = rubiksCubeLogic;
-
-        // let faces : Face[] = [ Face.BACK, Face.FRONT, Face.UP, Face.LEFT, Face.RIGHT ];
-        // let faces : Face[] = [ Face.UP, Face.RIGHT, Face.LEFT, Face.E ];
-        // for (let i = 0; i < faces.length; i++) {
-        //     this.possibleMoves.push({ face: faces[i], inverse: true });
-        //     this.possibleMoves.push({ face: faces[i], inverse: false });
-        // }
 
         this.target = (rc: RubiksCubeLogic) => {
             // let face = Face.DOWN;
@@ -79,12 +86,45 @@ class CFOPGuide {
         // TODO mark off 'solved by accident' pairs (using regex and string rep)
         this.targetPairs = ['redGreen', 'greenOrange', 'orangeBlue', 'blueRed']
         this.pairProgress = 0;
-        // this.f2lPairs = {
-        //     redGreen: false,
-        //     greenOrange: false,
-        //     orangeBlue: false,
-        //     blueRed: false,
-        // }
+
+        // edge orientation
+        // NOTE order matters in edge orientation
+        this.edge_orientation = {
+            full: CFOPGuide.targetStringToRegex('.Y.YYY.Y.'),
+            opposite: CFOPGuide.targetStringToRegex('...YYY...'),
+            adjacent: CFOPGuide.targetStringToRegex('....YY.Y.'),
+            none: CFOPGuide.targetStringToRegex('.........'),
+        };
+
+        this.edge_orientation_algs = {
+            full: [],
+            opposite: "F R U R' U' F'".split(' '),
+            adjacent: "f R U R' U' f'".split(' '),
+            none: "F R U R' U' F' f R U R' U' f'".split(' '),
+        };
+
+        this.edge_orientation_case_order = ['full','opposite','adjacent','none']
+
+        // NOTE order matters in corner orientation
+        this.corner_orientation = {
+            full: CFOPGuide.targetStringToRegex('YYYYYYYYY'),
+            bowtie: CFOPGuide.targetStringToRegex('.YYYYYYY.'),
+            headlights: CFOPGuide.targetStringToRegex('YYYYYY.Y.'), // +chameleon
+            sune: CFOPGuide.targetStringToRegex('.Y.YYYYY.'), // +anti_sune
+            car: CFOPGuide.targetStringToRegex('.Y.YYY.Y.'), // +blinker
+        }
+        this.corner_orientation_case_order = ['full', 'bowtie', 'headlights', 'sune', 'car']
+
+        this.corner_orientation_algs = {
+            full: [],
+            bowtie: "F' r U R' U' r' F R".split(' '),
+            headlights: "R R D R' U U R D' R' U U R'".split(' '),
+            chameleon: "r U R' U' r' F R F'".split(' '),
+            sune: "R U R' U R U U R'".split(' '),
+            anti_sune: "R' U' R U' R' U U R".split(' '),
+            car: "F R U R' U' R U R' U' R U R' U'".split(' '),
+            blinker: "f R U R' U' f' F R U R' U' F'".split(' '),
+        };
     }
 
     // assumes yellow on top, get pair
@@ -127,6 +167,51 @@ class CFOPGuide {
                 rcl.turn(Face.FRONT, turn.length > 1);
             else if (turn[0] == 'B')
                 rcl.turn(Face.BACK, turn.length > 1);
+            else if (turn[0] == 'r') {
+                rcl.turn(Face.RIGHT, turn.length > 1);
+                rcl.turn(Face.M, turn.length <= 1);
+            }
+            else if (turn[0] == 'l') {
+                rcl.turn(Face.LEFT, turn.length > 1);
+                rcl.turn(Face.M, turn.length > 1);
+            }
+            else if (turn[0] == 'u') {
+                rcl.turn(Face.UP, turn.length > 1);
+                rcl.turn(Face.E, turn.length <= 1);
+            }
+            else if (turn[0] == 'd') {
+                rcl.turn(Face.DOWN, turn.length > 1);
+                rcl.turn(Face.E, turn.length > 1);
+            }
+            else if (turn[0] == 'f') {
+                rcl.turn(Face.FRONT, turn.length > 1);
+                rcl.turn(Face.S, turn.length > 1);
+            }
+            else if (turn[0] == 'b') {
+                rcl.turn(Face.BACK, turn.length > 1);
+                rcl.turn(Face.S, turn.length <= 1);
+            }
+        });
+    }
+
+    static applyTurnsCube(rc: RubiksCube, turns: string[]) {
+        turns.forEach(turn => {
+            if (turn[0] == 'y')
+                rc.turnY(turn.length > 1);
+            else if (turn[0] == 'x')
+                rc.turnX(turn.length > 1);
+            else if (turn[0].toUpperCase() == 'R')
+                rc.turnRight(turn.length > 1, turn[0] == 'r');
+            else if (turn[0].toUpperCase() == 'L')
+                rc.turnLeft(turn.length > 1, turn[0] == 'l');
+            else if (turn[0].toUpperCase() == 'U')
+                rc.turnUp(turn.length > 1, turn[0] == 'u');
+            else if (turn[0].toUpperCase() == 'D')
+                rc.turnDown(turn.length > 1, turn[0] == 'd');
+            else if (turn[0].toUpperCase() == 'F')
+                rc.turnFront(turn.length > 1, turn[0] == 'f');
+            else if (turn[0].toUpperCase() == 'B')
+                rc.turnBack(turn.length > 1, turn[0] == 'b');
         });
     }
 
@@ -431,15 +516,136 @@ class CFOPGuide {
         return res;
     }
 
+    detectOLLCase() {
+        // TODO assumes top layer is yellow, fix
+        let totalEdgeUTurns = 0;
+        let copy = this.rubiksCubeLogic.copy();
+
+        let edge_case;
+        
+        for (const i in this.edge_orientation_case_order) {
+            let curr_case = this.edge_orientation_case_order[i];
+            for (let j = 0; j < 4; j++) {
+                let yellow_layer = copy.getFaceColors(Face.UP).join('');
+                if (yellow_layer.match(this.edge_orientation[curr_case as 'full'])) {
+                    edge_case = curr_case;
+                    break;
+                }
+                copy.turn(Face.UP, false);
+                totalEdgeUTurns += 1;
+            }
+            if (edge_case)
+                break;
+        }
+
+        if (!edge_case)
+            throw 'Invalid edge orientation case';
+        
+        console.log(`edge case: ${edge_case}`)
+        CFOPGuide.applyTurns(copy, this.edge_orientation_algs[edge_case as 'full'])
+
+        let corner_case;
+        let totalCornerUTurns = 0;
+        
+        for (const i in this.corner_orientation_case_order) {
+            let curr_case = this.corner_orientation_case_order[i];
+            for (let j = 0; j < 4; j++) {
+                let yellow_layer = copy.getFaceColors(Face.UP).join('');
+                if (yellow_layer.match(this.corner_orientation[curr_case as 'full'])) {
+                    corner_case = curr_case;
+                    break;
+                }
+                copy.turn(Face.UP, false);
+                totalCornerUTurns += 1;
+            }
+            if (corner_case)
+                break;
+        }
+
+        console.log(`corner case (before): ${corner_case}`)
+
+        if (!corner_case)
+            throw 'Invalid corner orientation case';
+        else if (corner_case == 'sune') {
+            if (copy.cubes[26].getColor(Face.FRONT) != ColorName.YELLOW) {
+                corner_case = 'anti_sune';
+                totalCornerUTurns += 1;
+            }
+        } else if (corner_case == 'car') {
+            if (copy.cubes[6].getColor(Face.BACK) == ColorName.YELLOW &&
+                copy.cubes[8].getColor(Face.BACK) == ColorName.YELLOW) {
+                if (copy.cubes[24].getColor(Face.LEFT) == ColorName.YELLOW) {
+                    totalCornerUTurns += 3;
+                    corner_case = 'blinker';
+                }
+            } else if (copy.cubes[6].getColor(Face.BACK) == ColorName.YELLOW) {
+                totalCornerUTurns += 2;
+                corner_case = 'blinker';
+            } else if (copy.cubes[8].getColor(Face.BACK) == ColorName.YELLOW) {
+                corner_case = 'blinker';
+            } else if (copy.cubes[24].getColor(Face.LEFT) == ColorName.YELLOW) {
+                totalCornerUTurns += 1;
+            } else {
+                totalCornerUTurns += 1;
+                corner_case = 'blinker';
+            }
+        } else if (corner_case == 'headlights') {
+            if (copy.cubes[26].getColor(Face.FRONT) != ColorName.YELLOW) {
+                corner_case = 'chameleon';
+                totalCornerUTurns += 1;
+            }
+        } else if (corner_case == 'bowtie') {
+            if (copy.cubes[26].getColor(Face.FRONT) != ColorName.YELLOW) {
+                totalCornerUTurns += 2;
+            }
+        }
+
+        totalEdgeUTurns %= 4;
+        totalCornerUTurns %= 4;
+
+        console.log(`corner case (after): ${corner_case}`)
+
+        return {
+            edge: {
+                case: edge_case,
+                u_turns: totalEdgeUTurns
+            },
+            corner: {
+                case: corner_case,
+                u_turns: totalCornerUTurns
+            }
+        }
+    }
+
     // Assumes f2l is done
     oll() {
+        let oll_case = this.detectOLLCase();
 
-
+        let edge_pre : string[] = [];
+        if (oll_case.edge.u_turns == 3)
+            edge_pre = [ "U'" ]
+        else if (oll_case.edge.u_turns > 0)
+            edge_pre = 'U '.repeat(oll_case.edge.u_turns).trim().split(' ');
+           
+        let corner_pre : string[] = [];
+        if (oll_case.corner.u_turns == 3)
+            corner_pre = [ "U'" ]
+        else if (oll_case.corner.u_turns > 0)
+            corner_pre = 'U '.repeat(oll_case.corner.u_turns).trim().split(' ');
+    
+        return {
+            edge_orientation: edge_pre.concat(this.edge_orientation_algs[oll_case.edge.case as 'full']),
+            corner_orientation: corner_pre.concat(this.corner_orientation_algs[oll_case.corner.case as 'full'])
+        }
     }
 
     // Assumes oll is done
     pll() {
-
+        // corner permutation
+        let corner_permutation = {
+            cw_corner: CFOPGuide.targetStringToRegex('YYYYYYYYY'),
+            e_perm: CFOPGuide.targetStringToRegex('YYYYYYYYY'),
+        }
     }
 
     solve(rubiksCubeLogic: RubiksCubeLogic, depth = 25, possible_moves: Turn[], is_target: (rcl: RubiksCubeLogic) => boolean, str: string) : null | Turn[] {
