@@ -242,6 +242,15 @@ document.getElementById('idSearch')?.addEventListener('click', e => {
                 console.log(res)
                 let moves = res.edge_orientation.concat(res.corner_orientation);
                 CFOPGuide.applyTurnsCube(rubiks_cube, moves)
+
+                rubiks_cube.setFinishAnimationAction(() => {
+                    let [res, res2] = guide.pll();
+                    let total = res.concat(res2);
+                    console.log('pll1:', res)
+                    console.log('pll2:', res2)
+                    CFOPGuide.applyTurnsCube(rubiks_cube, total)
+                    // CFOPGuide.applyTurnsCube(rubiks_cube, res2)
+                }, true);
             }, true);
         }
     }

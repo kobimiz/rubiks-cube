@@ -122,7 +122,7 @@ class CFOPGuide {
             chameleon: "r U R' U' r' F R F'".split(' '),
             sune: "R U R' U R U U R'".split(' '),
             anti_sune: "R' U' R U' R' U U R".split(' '),
-            car: "F R U R' U' R U R' U' R U R' U'".split(' '),
+            car: "F R U R' U' R U R' U' R U R' U' F'".split(' '),
             blinker: "f R U R' U' f' F R U R' U' F'".split(' '),
         };
     }
@@ -212,6 +212,34 @@ class CFOPGuide {
                 rc.turnFront(turn.length > 1, turn[0] == 'f');
             else if (turn[0].toUpperCase() == 'B')
                 rc.turnBack(turn.length > 1, turn[0] == 'b');
+            else if (turn[0].toUpperCase() == 'M')
+                rc.turnM(turn.length > 1);
+        });
+    }
+
+    static strToTurns(str: string): Turn[] {
+        return str.split(' ').map(action => {
+            if (action[0] == 'y')
+                return { face: Face.E, inverse: action.length > 1};
+            else if (action[0] == 'x')
+                return { face: Face.M, inverse: action.length > 1};
+            else if (action[0].toUpperCase() == 'R')
+                return { face: Face.RIGHT, inverse: action.length > 1 };
+            else if (action[0].toUpperCase() == 'L')
+                return { face: Face.LEFT, inverse: action.length > 1 };
+            else if (action[0].toUpperCase() == 'U')
+                return { face: Face.UP, inverse: action.length > 1 };
+            else if (action[0].toUpperCase() == 'D')
+                return { face: Face.DOWN, inverse: action.length > 1 };
+            else if (action[0].toUpperCase() == 'F')
+                return { face: Face.FRONT, inverse: action.length > 1 };
+            else if (action[0].toUpperCase() == 'B')
+                return { face: Face.BACK, inverse: action.length > 1 };
+            else if (action[0].toUpperCase() == 'M')
+                return { face: Face.M, inverse: action.length > 1 };
+
+            // TODO something about this
+            return { face: Face.FRONT, inverse: true }
         });
     }
 
@@ -642,10 +670,56 @@ class CFOPGuide {
     // Assumes oll is done
     pll() {
         // corner permutation
-        let corner_permutation = {
-            cw_corner: CFOPGuide.targetStringToRegex('YYYYYYYYY'),
-            e_perm: CFOPGuide.targetStringToRegex('YYYYYYYYY'),
-        }
+        // let corner_permutation = {
+        //     cw_corner: CFOPGuide.targetStringToRegex('YYYYYYYYY'),
+        //     e_perm: CFOPGuide.targetStringToRegex('YYYYYYYYY'),
+        // }
+        let copy = this.rubiksCubeLogic.copy();
+        let turns = [
+            'U', "U'", "x R' U R' D D R U' R' D D R R x'", "x' R U' R' D R U R' u u R' U R D R' U' R x'"
+        ].map(turn => CFOPGuide.strToTurns(turn));
+
+        let target = (rcl: RubiksCubeLogic) => {
+            let faces = [ Face.BACK, Face.FRONT, Face.UP, Face.DOWN, Face.RIGHT, Face.LEFT ]
+            let pieces_to_ignore = [7,7,null,null,5,5]
+            for (const i in faces) {
+                let faceColors = rcl.getFaceColors(faces[i]);
+                if (pieces_to_ignore[i])
+                    faceColors.splice(pieces_to_ignore[i] as number, 1)
+
+                if (!faceColors.every(c => c == faceColors[0]))
+                    return false;
+            }
+            return true;
+        };
+        // TODO check max depth
+        let res = this.iterativeDeepening(copy, 7, turns, target);
+        let res_formatted = (res ? (this.formatSol(res[2] as Turn[])) : []);
+
+
+        CFOPGuide.applyTurns(copy, res_formatted)
+        let copy2 = copy.copy();
+        let turns2 = [
+            'U', "U'", "R R U R U R' U' R' U' R' U R'", "R U' R U R U R U' R' U' R R", "M M U M M U U M M U M M", "M M U M M U M' U U M M U U M' U U"
+        ].map(turn => CFOPGuide.strToTurns(turn));
+
+        let target2 = (rcl: RubiksCubeLogic) => {
+            let faces = [ Face.BACK, Face.FRONT, Face.UP, Face.DOWN, Face.RIGHT, Face.LEFT ]
+            for (const i in faces) {
+                let faceColors = rcl.getFaceColors(faces[i]);
+
+                if (!faceColors.every(c => c == faceColors[0]))
+                    return false;
+            }
+            return true;
+        };
+        // TODO check max depth
+        let res2 = this.iterativeDeepening(copy2, 7, turns2, target2);
+        let res2_formatted = (res2 ? (this.formatSol(res2[2] as Turn[])) : []);
+        // let res2_formatted = (res ? (this.formatSol(res[2] as Turn[])) : []);
+
+
+        return [res_formatted, res2_formatted];
     }
 
     solve(rubiksCubeLogic: RubiksCubeLogic, depth = 25, possible_moves: Turn[][], is_target: (rcl: RubiksCubeLogic) => boolean, str: string) : null | Turn[] {
@@ -673,8 +747,8 @@ class CFOPGuide {
                 else
                     resultingState.turn(turn.face, turn.inverse);
             });
-            // let newStr = `${str} ${this.formatSol([possible_moves[i]])[0]}`;
-            let newStr = ``;
+            let newStr = `${str} ${i}}`;
+            // let newStr = ``;
             let res = this.solve(resultingState, depth - 1, possible_moves, is_target, newStr);
             // visited.add(resultingState.toString())
             
