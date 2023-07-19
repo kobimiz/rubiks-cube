@@ -10,15 +10,85 @@
 <body>
     <div id="container">
         <canvas class="canvas" style="border: 1px solid black" height="1000" width="1000"></canvas>
-        <div id="info">
-            <input type="button" id="shuffle" value="Shuffle">
-            <input type="button" id="solve" value="Solve">
+        <div id="rightSide">
+            <div id="info">
+                <input type="button" id="shuffle" value="Shuffle">
+                <input type="button" id="solve" value="Solve">
+                <input type="button" id="idSearch" value="iterative deepening">
+                <!-- <input type="button" id="undoLast" value="undo last"> -->
+                <br>
+                Move count: <span id="moveCount">0</span>
+                <br> 
+                Moves: <span id="moves"></span>
+                <br>
+                <span id="message"></span>
+            </div>
             <br>
-            Moves: <span id="moves"></span>
-            <br> 
-            Move count: <span id="moveCount">0</span>
             <br>
-            <span id="message"></span>
+            <div id="help">
+                <h2>Instructions</h2>
+                <p>
+                    Use the arrow keys to rotate the cube in any direction.
+                    Use the keys <b>R,L,U,D,F,B</b> to turn the <b>right, left, up, down, front, back</b> sides
+                    of the cube respectivley.
+                    You can also turn slices using the <b>M,S,E</b> keys.
+                    You can use modifier keys to change the effect of each turn. Use the <b>Shift</b> key to turn in the
+                    opposite direction. Use <b>Caps Lock</b> to turn two layers at once.
+                </p>
+
+                <br>
+                <h2>About this tutorial</h2>
+                <p>
+                    This tutotial aims to help learning the CFOP method for solving the Rubik's Cube. The stages in this
+                    method are as following:
+                    <ol>
+                        <li id="crossStepButton">Cross</li>
+                        <li id="f2lStepButton">F2L (first two layers)</li>
+                        <li id="ollStepButton">OLL (orientation of last layer)</li>
+                        <li id="pllStepButton">PLL (permutation of last layer)</li>
+                    </ol>
+                </p>
+
+                <br>
+                <div id="stepExplanations">
+                    <div id="crossStep">
+                        <h2>Cross</h2>
+                        <p>
+                            In this step, we focus on the white face (although any face can be used). We identify
+                            faces using the center piece in each face of the cube, since the position of the center pieces
+                            doesn't change relative to one another. There are two types of pieces in the cube: corner pieces
+                            with 3 visible sides and edge pieces with 2 visible sides. In this step, we want to solve the
+                            white cross, meaning we want to solve the white edges. We want to do this however in a way that 
+                            the other side of the edge aligns with the color of the other face.
+                            Note that we alway look at the cube with the white layer at the bottom.
+                        </p>
+                    </div>
+                    <div id="f2lStep">
+                        <h2>F2L</h2>
+                        <p>
+                            In this step, we solve the first two layers. We do this by finding pairs of matching corners and edges,
+                            pairing them and inserting them to their appropriate slots. There are 4 such pairs
+                        </p>
+                    </div>
+                    <div id="ollStep">
+                        <h2>OLL</h2>
+                        <p>
+                            Now, the first two layers are solved. Note that all of the yellow pieces (belonging to the yellow layer)
+                            are now at the yellow layer, but scrambled. In this step, we want to flip all the yellow edges so that
+                            the yellow layer will be all yellow. Note that the pieces themselves can still be in the wrong place!
+                            This stage is divided into two ministeps- solving the yellow edges (cross) and then the yellow corners.
+                        </p>
+                    </div>
+                    <div id="pllStep">
+                        <h2>PLL</h2>
+                        <p>
+                            In the final step, we want to permute (move around) the piece of the yellow layer so that the cube is solved.
+                            Like the previous step, this step can be divided into two ministeps- permuting the corners of the last layer
+                            and the permuting the edges of the last layer.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <script src="../dist/bundle.js" defer></script>

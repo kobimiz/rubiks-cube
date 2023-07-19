@@ -283,6 +283,46 @@ document.getElementById('undoLast')?.addEventListener('click', e => {
 
 console.log(guide)
 
+// crossStepButton
+// f2lStepButton
+// ollStepButton
+// pllStepButton
+
+let crossStep = document.getElementById('crossStep') as HTMLElement
+let f2lStep = document.getElementById('f2lStep') as HTMLElement
+let ollStep = document.getElementById('ollStep') as HTMLElement
+let pllStep = document.getElementById('pllStep') as HTMLElement
+
+let activeStep : HTMLElement | null = null;
+document.getElementById('crossStepButton')?.addEventListener('click', e => {
+    if (activeStep && (activeStep != crossStep))
+        activeStep.style.display = 'none';
+
+    activeStep = crossStep;
+    activeStep.style.display = 'initial';
+});
+document.getElementById('f2lStepButton')?.addEventListener('click', e => {
+    if (activeStep && (activeStep != f2lStep))
+        activeStep.style.display = 'none';
+
+    activeStep = f2lStep;
+    activeStep.style.display = 'initial';
+});
+document.getElementById('ollStepButton')?.addEventListener('click', e => {
+    if (activeStep && (activeStep != ollStep))
+        activeStep.style.display = 'none';
+
+    activeStep = ollStep;
+    activeStep.style.display = 'initial';
+});
+document.getElementById('pllStepButton')?.addEventListener('click', e => {
+    if (activeStep && (activeStep != pllStep))
+        activeStep.style.display = 'none';
+
+    activeStep = pllStep;
+    activeStep.style.display = 'initial';
+});
+
 // document.addEventListener('keydown', e => {
 //     const cameraSpeed = 0.2;
 

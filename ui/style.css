@@ -13,6 +13,23 @@
     padding-top: 10px;
 }
 
+#rightSide {
+    margin: 10px;
+}
+
+#info {
+    min-height: 500px;
+}
+
+#help li {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#stepExplanations > div {
+    display: none;
+}
+
 .generatedMove {
     color: red;
 }
