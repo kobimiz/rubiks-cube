@@ -113,7 +113,7 @@ class Cube {
         mat4.perspective(
             projection,
             45.0,
-            1000.0 / 1000.0,
+            900.0 / 900.0,
             0.1,
             100.0
         );

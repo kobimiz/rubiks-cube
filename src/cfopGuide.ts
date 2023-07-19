@@ -150,6 +150,9 @@ class CFOPGuide {
     }
 
     static applyTurns(rcl: RubiksCubeLogic, turns: string[]) {
+        // TODO handle 2 case also in prev
+        // turns = turns.map(turn => turn.replace(/(.*)2/, '$1 $1').split(' ')).flat()
+
         turns.forEach(turn => {
             if (turn[0] == 'y')
                 rcl.turnY(turn.length > 1);
@@ -195,6 +198,8 @@ class CFOPGuide {
     }
 
     static applyTurnsCube(rc: RubiksCube, turns: string[]) {
+        // TODO handle 2 case also in prev
+        turns = turns.map(turn => turn.replace(/(.*)2/, '$1 $1').split(' ')).flat()
         turns.forEach(turn => {
             if (turn[0] == 'y')
                 rc.turnY(turn.length > 1);
@@ -362,12 +367,6 @@ class CFOPGuide {
             blueRed: [ColorName.BLUE, ColorName.RED],
         }
         let colors = pair_map[nextPair as 'redGreen'];
-
-        let corner = this.rubiksCubeLogic.getCornerPosition(ColorName.WHITE, colors[0], colors[1]);
-        let edge = this.rubiksCubeLogic.getEdgePosition(colors[0], colors[1]);
-
-        let corner_index = corner[0] as number;
-        let edge_index = edge[0] as number;
         
         // let corner_faces = this.getPieceFaces(corner[0] as number);
         // let edge_faces = this.getPieceFaces(edge[0] as number);
@@ -420,6 +419,32 @@ class CFOPGuide {
 
         let copy = this.rubiksCubeLogic.copy();
         let f2lCases = new F2LCases(copy);
+
+        // restore original state- yellow on top
+        copy.rotations.reverse().forEach(rot => {
+            if (rot == CubeRotation.X) {
+                copy.turnX(true);
+                solution.push("x'");
+            }
+            else if (rot == CubeRotation.Xp) {
+                copy.turnX(false);
+                solution.push("x");
+            }
+            else if (rot == CubeRotation.Y) {
+                copy.turnY(true);
+                solution.push("y'");
+            }
+            else if (rot == CubeRotation.Yp) {
+                copy.turnX(false);
+                solution.push("y");
+            }
+        })
+
+        let corner = copy.getCornerPosition(ColorName.WHITE, colors[0], colors[1]);
+        let edge = copy.getEdgePosition(colors[0], colors[1]);
+
+        let corner_index = corner[0] as number;
+        let edge_index = edge[0] as number;
 
         // adjust edge to be in front/up right
         // if (edge_index == edges_indices.FL || edge_index == edges_indices.UF) {

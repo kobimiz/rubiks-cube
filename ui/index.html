@@ -4,20 +4,31 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Rubik's Cube Guide</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="container">
-        <canvas class="canvas" style="border: 1px solid black" height="1000" width="1000"></canvas>
+        <canvas class="canvas" style="border: 1px solid black" height="900" width="900"></canvas>
         <div id="rightSide">
             <div id="info">
                 <input type="button" id="shuffle" value="Shuffle">
-                <input type="button" id="solve" value="Solve">
-                <input type="button" id="idSearch" value="iterative deepening">
+                <input type="button" id="solve" value="Solve (non human)">
+
+                <div id="stagedButtons">
+                    <input type="button" id="solveCross" value="Solve cross">
+                    <input type="button" id="solveNextPair" value="Solve next pair">
+                    <input type="button" id="solveOLL1" value="Solve OLL1">
+                    <input type="button" id="solveOLL2" value="Solve OLL2">
+                    <input type="button" id="solvePLL1" value="Solve PLL1">
+                    <input type="button" id="solvePLL2" value="Solve PLL2">
+                </div>
                 <!-- <input type="button" id="undoLast" value="undo last"> -->
                 <br>
+                <br>
                 Move count: <span id="moveCount">0</span>
+                <br> 
+                <!-- Solution stage: <span id="solutionStage">Solved</span> -->
                 <br> 
                 Moves: <span id="moves"></span>
                 <br>

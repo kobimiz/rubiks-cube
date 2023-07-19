@@ -18,7 +18,7 @@
 }
 
 #info {
-    min-height: 500px;
+    min-height: 400px;
 }
 
 #help li {
@@ -28,6 +28,15 @@
 
 #stepExplanations > div {
     display: none;
+}
+
+#stagedButtons {
+    margin-top: 10px;
+}
+
+#stagedButtons input {
+    /* display: none; */
+    /* margin-right: 5px; */
 }
 
 .generatedMove {

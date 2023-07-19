@@ -12,6 +12,7 @@ import * as cubeSolver from 'cube-solver';
 
 import { CFOPGuide } from "./cfopGuide";
 import { F2LCases } from "./f2lCases";
+import { CurrentStage } from "./currentStage";
 
 console.log(cubeSolver)
 
@@ -37,7 +38,7 @@ FacePermutor.init();
 
 let rubiks_cube = new RubiksCube(3, gl, shader, shader_outline)
 
-let fps = 300;
+let fps = 30;
 let time_delta = 1000 / fps;
 
 let messageElement = document.getElementById('message') as HTMLElement;
@@ -61,6 +62,9 @@ function draw(gl: WebGL2RenderingContext) {
 }
 
 let drawInterval = setInterval(draw, time_delta, gl);
+
+let currentStage = new CurrentStage(rubiks_cube.rubiksCubeLogic);
+let currentStageElement = document.getElementById('solutionStage') as HTMLElement;
 
 document.addEventListener('keydown', e => {
     let side_to_rotate = e.key.toLowerCase();
@@ -90,6 +94,8 @@ document.addEventListener('keydown', e => {
         rubiks_cube.turnX(false);
     else if (e.key == 'ArrowDown')
         rubiks_cube.turnX(true);
+
+    // rubiks_cube.setFinishAnimationAction(() => { currentStage.updateUI() }, true);
 });
 console.log(rubiks_cube)
 
@@ -105,6 +111,7 @@ document.getElementById('shuffle')?.addEventListener('click', e => {
         if (rubiks_cube.animation == null && rubiks_cube.actionQueue.length == 0) {
             clearInterval(drawInterval);
 
+            // currentStage.updateUI();
             time_delta *= 3;
             drawInterval = setInterval(draw, time_delta, gl) as unknown as NodeJS.Timer;
         }
@@ -144,87 +151,113 @@ document.getElementById('solve')?.addEventListener('click', e => {
     });
 });
 
-document.getElementById('specificShuffle')?.addEventListener('click', e => {
-    let solve = cubeSolver.solve(rubiks_cube.getScrambleString(), 'cross').split(' ');
-    solve.forEach(turn => {
-        let face = turn.at(0);
-        let inverse = false;
-        let count = 1;
-        
-        if (turn.length == 2) {
-            if (turn.at(1) == "'")
-            inverse = true;
-            else
-            count = 2;
-        }
-        
-        for (let i = 0; i < count; i++) {
-            if (face == 'F')
-                rubiks_cube.turnFront(inverse)
-            else if (face == 'B')
-                rubiks_cube.turnBack(inverse)
-            else if (face == 'R')
-                rubiks_cube.turnRight(inverse)
-            else if (face == 'L')
-                rubiks_cube.turnLeft(inverse)
-            else if (face == 'U')
-                rubiks_cube.turnUp(inverse)
-            else if (face == 'D')
-                rubiks_cube.turnDown(inverse)
-        }
-    });
-});
-
-document.getElementById('custom')?.addEventListener('click', e => {
-    // R D' B' L R L D R2 B' F' B' L' U R F' L' D2 L F D' R'
-    let removed = 5;
-    let solve = "R D' B' L R L D R2 B' F' B' L' U R F' L' D2 L F D' R' U2 B' U B F U F'".split(" ");
-    for (let i = 0; i < removed; i++) {
-        solve.pop();
-    }
-
-    solve.forEach(turn => {
-        let face = turn.at(0);
-        let inverse = false;
-        let count = 1;
-        
-        if (turn.length == 2) {
-            if (turn.at(1) == "'")
-            inverse = true;
-            else
-            count = 2;
-        }
-        
-        for (let i = 0; i < count; i++) {
-            if (face == 'F')
-                rubiks_cube.turnFront(inverse)
-            else if (face == 'B')
-                rubiks_cube.turnBack(inverse)
-            else if (face == 'R')
-                rubiks_cube.turnRight(inverse)
-            else if (face == 'L')
-                rubiks_cube.turnLeft(inverse)
-            else if (face == 'U')
-                rubiks_cube.turnUp(inverse)
-            else if (face == 'D')
-                rubiks_cube.turnDown(inverse)
-        }
-    });
-
-    let guide = new CFOPGuide(rubiks_cube.rubiksCubeLogic);
-    let inter = setInterval(() => {
-        if (rubiks_cube.actionQueue.length == 0) {
-            setTimeout(() => {
-                // let res = guide.iterativeDeepening(removed + 1, true) as any[];
-                // console.log(res[2]);
-            }, 20 * time_delta);
-            clearInterval(inter);
-        }
-    }, 100)
-});
-
 let lastMoves : string[] = []
 let guide = new CFOPGuide(rubiks_cube.rubiksCubeLogic);
+
+document.getElementById('solveCross')?.addEventListener('click', e => {
+    let solve = cubeSolver.solve(rubiks_cube.getScrambleString(), 'cross').split(' ');
+    console.log(solve)
+    CFOPGuide.applyTurnsCube(rubiks_cube, solve);
+    // rubiks_cube.setFinishAnimationAction(() => {
+    //     currentStage.updateUI();
+    // }, true);
+});
+
+document.getElementById('solveNextPair')?.addEventListener('click', e => {
+    let res = guide.solveNextF2LPair();
+    lastMoves = res.solution.concat(res.rotation_sol).concat(res.insertion_sol);
+    CFOPGuide.applyTurnsCube(rubiks_cube, lastMoves)
+    // rubiks_cube.setFinishAnimationAction(() => {
+    //     currentStage.updateUI();
+    // }, true);
+});
+
+document.getElementById('solveOLL1')?.addEventListener('click', e => {
+    let res = guide.oll();
+    let moves = res.edge_orientation;
+    CFOPGuide.applyTurnsCube(rubiks_cube, moves)
+    // rubiks_cube.setFinishAnimationAction(() => {
+    //     currentStage.updateUI();
+    // }, true);
+});
+
+document.getElementById('solveOLL2')?.addEventListener('click', e => {
+    let res = guide.oll();
+    let moves = res.corner_orientation;
+    CFOPGuide.applyTurnsCube(rubiks_cube, moves)
+    // rubiks_cube.setFinishAnimationAction(() => {
+    //     currentStage.updateUI();
+    // }, true);
+});
+
+document.getElementById('solvePLL1')?.addEventListener('click', e => {
+    let [res, res2] = guide.pll();
+    let total = res
+    CFOPGuide.applyTurnsCube(rubiks_cube, total)
+    // rubiks_cube.setFinishAnimationAction(() => {
+    //     currentStage.updateUI();
+    // }, true);
+});
+
+document.getElementById('solvePLL2')?.addEventListener('click', e => {
+    let [res, res2] = guide.pll();
+    let total = res2;
+    CFOPGuide.applyTurnsCube(rubiks_cube, total)
+    // rubiks_cube.setFinishAnimationAction(() => {
+        // currentStage.updateUI();
+    // }, true);
+});
+
+// document.getElementById('custom')?.addEventListener('click', e => {
+//     // R D' B' L R L D R2 B' F' B' L' U R F' L' D2 L F D' R'
+//     let removed = 5;
+//     let solve = "R D' B' L R L D R2 B' F' B' L' U R F' L' D2 L F D' R' U2 B' U B F U F'".split(" ");
+//     for (let i = 0; i < removed; i++) {
+//         solve.pop();
+//     }
+
+//     solve.forEach(turn => {
+//         let face = turn.at(0);
+//         let inverse = false;
+//         let count = 1;
+        
+//         if (turn.length == 2) {
+//             if (turn.at(1) == "'")
+//             inverse = true;
+//             else
+//             count = 2;
+//         }
+        
+//         for (let i = 0; i < count; i++) {
+//             if (face == 'F')
+//                 rubiks_cube.turnFront(inverse)
+//             else if (face == 'B')
+//                 rubiks_cube.turnBack(inverse)
+//             else if (face == 'R')
+//                 rubiks_cube.turnRight(inverse)
+//             else if (face == 'L')
+//                 rubiks_cube.turnLeft(inverse)
+//             else if (face == 'U')
+//                 rubiks_cube.turnUp(inverse)
+//             else if (face == 'D')
+//                 rubiks_cube.turnDown(inverse)
+//         }
+//     });
+
+//     let guide = new CFOPGuide(rubiks_cube.rubiksCubeLogic);
+//     let inter = setInterval(() => {
+//         if (rubiks_cube.actionQueue.length == 0) {
+//             setTimeout(() => {
+//                 // let res = guide.iterativeDeepening(removed + 1, true) as any[];
+//                 // console.log(res[2]);
+//             }, 20 * time_delta);
+//             clearInterval(inter);
+//         }
+//     }, 100)
+// });
+
+
+
 document.getElementById('idSearch')?.addEventListener('click', e => {
     let i = 0;
     function cb() {
@@ -258,28 +291,28 @@ document.getElementById('idSearch')?.addEventListener('click', e => {
     rubiks_cube.setFinishAnimationAction(cb, true);
 });
 
-document.getElementById('undoLast')?.addEventListener('click', e => {
-    lastMoves.reverse();
+// document.getElementById('undoLast')?.addEventListener('click', e => {
+//     lastMoves.reverse();
 
-    lastMoves.forEach(turn => {
-        if (turn[0] == 'y')
-            rubiks_cube.turnY(turn.length <= 1);
-        else if (turn[0] == 'R')
-            rubiks_cube.turnRight(turn.length <= 1);
-        else if (turn[0] == 'L')
-            rubiks_cube.turnLeft(turn.length <= 1);
-        else if (turn[0] == 'U')
-            rubiks_cube.turnUp(turn.length <= 1);
-        else if (turn[0] == 'D')
-            rubiks_cube.turnDown(turn.length <= 1);
-        else if (turn[0] == 'F')
-            rubiks_cube.turnFront(turn.length <= 1);
-        else if (turn[0] == 'B')
-            rubiks_cube.turnBack(turn.length <= 1);
-    })
+//     lastMoves.forEach(turn => {
+//         if (turn[0] == 'y')
+//             rubiks_cube.turnY(turn.length <= 1);
+//         else if (turn[0] == 'R')
+//             rubiks_cube.turnRight(turn.length <= 1);
+//         else if (turn[0] == 'L')
+//             rubiks_cube.turnLeft(turn.length <= 1);
+//         else if (turn[0] == 'U')
+//             rubiks_cube.turnUp(turn.length <= 1);
+//         else if (turn[0] == 'D')
+//             rubiks_cube.turnDown(turn.length <= 1);
+//         else if (turn[0] == 'F')
+//             rubiks_cube.turnFront(turn.length <= 1);
+//         else if (turn[0] == 'B')
+//             rubiks_cube.turnBack(turn.length <= 1);
+//     })
 
-    lastMoves = [];
-});
+//     lastMoves = [];
+// });
 
 console.log(guide)
 
