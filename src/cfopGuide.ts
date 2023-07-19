@@ -263,10 +263,10 @@ class CFOPGuide {
     }
 
     getPossibleMoves(faces: Face[]) {
-        let res : Turn[] = []
+        let res : Turn[][] = []
         faces.forEach(face => {
-            res.push({ face: face, inverse: false });
-            res.push({ face: face, inverse: true });
+            res.push([{ face: face, inverse: false }]);
+            res.push([{ face: face, inverse: true }]);
         })
         return res;
     }
@@ -648,7 +648,7 @@ class CFOPGuide {
         }
     }
 
-    solve(rubiksCubeLogic: RubiksCubeLogic, depth = 25, possible_moves: Turn[], is_target: (rcl: RubiksCubeLogic) => boolean, str: string) : null | Turn[] {
+    solve(rubiksCubeLogic: RubiksCubeLogic, depth = 25, possible_moves: Turn[][], is_target: (rcl: RubiksCubeLogic) => boolean, str: string) : null | Turn[] {
         // if (visited.has(rubiksCubeLogic.toString()))
         //     return false;
 
@@ -665,25 +665,27 @@ class CFOPGuide {
             let resultingState = rubiksCubeLogic.copy();
             // resultingState.turn(possible_moves[i].face, possible_moves[i].inverse);
             // TODO clean
-            if (possible_moves[i].face == Face.E)
-                resultingState.turnY(possible_moves[i].inverse);
-            else if (possible_moves[i].face == Face.M)
-                resultingState.turnX(possible_moves[i].inverse);
-            else
-                resultingState.turn(possible_moves[i].face, possible_moves[i].inverse);
-            
-            let newStr = `${str} ${this.formatSol([possible_moves[i]])[0]}`;
+            possible_moves[i].forEach(turn => {
+                if (turn.face == Face.E)
+                    resultingState.turnY(turn.inverse);
+                else if (turn.face == Face.M)
+                    resultingState.turnX(turn.inverse);
+                else
+                    resultingState.turn(turn.face, turn.inverse);
+            });
+            // let newStr = `${str} ${this.formatSol([possible_moves[i]])[0]}`;
+            let newStr = ``;
             let res = this.solve(resultingState, depth - 1, possible_moves, is_target, newStr);
             // visited.add(resultingState.toString())
             
             if (res)
-                return [possible_moves[i]].concat(res);
+                return possible_moves[i].concat(res);
         }
         
         return null;
     }
 
-    iterativeDeepening(rcl: RubiksCubeLogic, max_depth: number, possible_moves: Turn[], is_target: (rcl: RubiksCubeLogic) => boolean) {
+    iterativeDeepening(rcl: RubiksCubeLogic, max_depth: number, possible_moves: Turn[][], is_target: (rcl: RubiksCubeLogic) => boolean) {
         let copy = rcl.copy();
         // Undo rotations
         // copy.rotations.slice().reverse().forEach(rot => {
